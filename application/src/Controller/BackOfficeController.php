@@ -7,6 +7,8 @@ use App\Component\HttpFoundation\XmlResponse;
 use App\Entity\Attendee;
 use App\Entity\Meeting;
 use App\Entity\Recording;
+use Firebase\JWT\JWT;
+use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -17,6 +19,14 @@ use stdClass;
  */
 class BackOfficeController extends DataController
 {
+
+    /**
+     * Default shared secret for BBB.
+     *
+     * @var string
+     */
+    const DEFAULT_SHARED_SECRET = '8cd8ef52e8e101574e400365b55e11a6';
+
     /**
      * @Route("/createMeeting", name="backOfficeMeetingCreate")
      */
@@ -157,6 +167,50 @@ class BackOfficeController extends DataController
         }, $meetingEntities);
 
         return new XmlResponse((object) ['meetings' => $meetings]);
+    }
+
+    /**
+     * @Route("/sendNotifications")
+     */
+    public function sendNotifications(): XmlResponse
+    {
+        $entities = $this->getDoctrine()
+            ->getRepository(Recording::class)
+        ->findAll();
+            //->findBy(['brokerNotified' => false]);
+
+        $client = HttpClient::create();
+        $entityManager = $this->getDoctrine()->getManager();
+
+        $notified = [];
+        foreach ($entities as $entity) {
+            $url = htmlspecialchars_decode($entity->getMetadataValue('bn-recording-ready-url'));
+            $jwtparams = JWT::encode((object) [
+                'record_id' => $entity->getRecordID(),
+            ], self::DEFAULT_SHARED_SECRET, 'HS256');
+
+            $response = $client->request('GET', $url, [
+                'query' => [
+                    'signed_parameters' => $jwtparams,
+                ]
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            if ($statusCode === 200 || $statusCode === 202) {
+                $notified[] = $entity->getRecordingInfo();
+                $entity->setBrokerNotified(true);
+                $entityManager->persist($entity);
+            }
+        }
+
+        $entityManager->flush();
+
+        return new XmlResponse((object) [
+            'recordings' => [
+                'forcexmlarraytype' => 'recording',
+                'array' => $notified,
+            ],
+        ]);
     }
 
     /**

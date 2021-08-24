@@ -32,6 +32,9 @@ class XmlResponse extends Response
      */
     protected function convertToXml(SimpleXMLElement $node, $data): void {
         foreach ((array) $data as $key => $value) {
+            if (is_array($value)) {
+                $value = (object) $value;
+            }
             if (is_object($value) && !empty($value->forcexmlarraytype)) {
                 $newkey = $value->forcexmlarraytype;
                 $value = array_values($value->array);

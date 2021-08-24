@@ -84,6 +84,11 @@ class Recording
      */
     private $recording = [];
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $brokerNotified = false;
+
     public function __construct()
     {
         $this->startTime = new \DateTime();
@@ -239,6 +244,16 @@ class Recording
         return $metadata;
     }
 
+    public function getMetadataValue(string $key)
+    {
+        $metadata = $this->getMetadata();
+        if (array_key_exists($key, $metadata)) {
+            return $metadata[$key];
+        }
+
+        return null;
+    }
+
     public function setMetadata(array $metadata): self
     {
         $this->metadata = $metadata;
@@ -326,5 +341,17 @@ class Recording
     protected function stringifyBool(bool $value): string
     {
         return $value ? 'true' : 'false';
+    }
+
+    public function getBrokerNotified(): ?bool
+    {
+        return $this->brokerNotified;
+    }
+
+    public function setBrokerNotified(bool $brokerNotified): self
+    {
+        $this->brokerNotified = $brokerNotified;
+
+        return $this;
     }
 }
