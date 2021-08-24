@@ -26,7 +26,7 @@ jobs:
             ghcr.io/${{ env.GH_OWNER }}/${{ env.REPOSITORY }}
           tags: |
             type=raw,value={{branch}}
-            type=match,pattern=v(\d+.\d+.\d+),value={{branch}}
+            type=ref,event=tag
       # https://github.com/docker/setup-qemu-action#usage
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
