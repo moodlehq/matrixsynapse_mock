@@ -12,10 +12,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use stdClass;
 
+/**
+ * @Route ("/backoffice")
+ */
 class BackOfficeController extends DataController
 {
     /**
-     * @Route("/backoffice/createMeeting", name="backOfficeMeetingCreate")
+     * @Route("/createMeeting", name="backOfficeMeetingCreate")
      */
     public function backOfficeMeetingCreate(Request $request): XmlResponse
     {
@@ -83,7 +86,7 @@ class BackOfficeController extends DataController
     }
 
     /**
-     * @Route("/backoffice/createRecording", name="backOfficeRecordingCreate")
+     * @Route("/createRecording", name="backOfficeRecordingCreate")
      */
     public function backOfficeRecordingCreate(Request $request): XmlResponse
     {
@@ -125,7 +128,7 @@ class BackOfficeController extends DataController
     }
 
     /**
-     * @Route("/backoffice/recordings", name="backOfficeListRecordings")
+     * @Route("/recordings", name="backOfficeListRecordings")
      */
     public function backOfficeListRecordings(): XmlResponse
     {
@@ -141,7 +144,7 @@ class BackOfficeController extends DataController
     }
 
     /**
-     * @Route("/backoffice/meetings", name="backOfficeListMeetings")
+     * @Route("/meetings", name="backOfficeListMeetings")
      */
     public function backOfficeListMeetings(): XmlResponse
     {
@@ -157,7 +160,7 @@ class BackOfficeController extends DataController
     }
 
     /**
-     * @Route("/backoffice/reset", name="backOfficeReset")
+     * @Route("/reset", name="backOfficeReset")
      */
     public function backOfficeReset(): XmlResponse
     {

@@ -17,11 +17,13 @@ use stdClass;
 
 /**
  * API Controller to serve a mock of the BigBlueButton API.
+ *
+ * @Route("/api")
  */
 class ApiController extends DataController
 {
     /**
-     * @Route("/api", name="status")
+     * @Route("", name="status")
      */
     public function status(): XmlResponse
     {
@@ -31,7 +33,7 @@ class ApiController extends DataController
     }
 
     /**
-     * @Route("/api/getMeetingInfo", name="meetingInfo")
+     * @Route("/getMeetingInfo", name="meetingInfo")
      */
     public function meetingInfo(Request $request): XmlResponse
     {
@@ -45,7 +47,7 @@ class ApiController extends DataController
     }
 
     /**
-     * @Route("/api/end", name="meetingEnd")
+     * @Route("/end", name="meetingEnd")
      */
     public function meetingEnd(Request $request): XmlResponse
     {
@@ -73,7 +75,7 @@ class ApiController extends DataController
     }
 
     /**
-     * @Route("/api/create", name="meetingCreate")
+     * @Route("/create", name="meetingCreate")
      */
     public function meetingCreate(Request $request): XmlResponse
     {
@@ -100,7 +102,7 @@ class ApiController extends DataController
     }
 
     /**
-     * @Route("/api/join", name="meetingJoin")
+     * @Route("/join", name="meetingJoin")
      */
     public function meetingJoin(Request $request): Response
     {
@@ -141,7 +143,7 @@ class ApiController extends DataController
     }
 
     /**
-     * @Route("/api/getRecordings", name="recordingsGet")
+     * @Route("/getRecordings", name="recordingsGet")
      */
     public function recordingsGet(Request $request): XmlResponse
     {
@@ -175,7 +177,7 @@ class ApiController extends DataController
     }
 
     /**
-     * @Route("/api/updateRecordings", name="recordingsUpdate")
+     * @Route("/updateRecordings", name="recordingsUpdate")
      */
     public function recordingsUpdate(Request $request): XmlResponse
     {
@@ -218,7 +220,7 @@ class ApiController extends DataController
     }
 
     /**
-     * @Route("/api/deleteRecordings", name="recordingsDelete")
+     * @Route("/deleteRecordings", name="recordingsDelete")
      */
     public function recordingsDelete(Request $request): XmlResponse
     {
