@@ -11,11 +11,7 @@ EXPOSE 80
 
 RUN apt update \
     && apt install -y zlib1g-dev g++ git libicu-dev zip libzip-dev \
-    && docker-php-ext-install intl opcache \
-    && pecl install apcu \
-    && apt-get purge -y --auto-remove -o APT:::AutoRemove::RecommendsImportant=false \
-    && rm -rf /tmp/pear /root/.pearrc \
-    && docker-php-ext-enable apcu
+    && apt-get purge -y --auto-remove -o APT:::AutoRemove::RecommendsImportant=false
 
 WORKDIR /var/www
 
