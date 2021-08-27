@@ -233,11 +233,14 @@ class BackOfficeController extends DataController
         ];
 
         $entityManager = $this->getDoctrine()->getManager();
-        foreach ($entities as $entity) {
-            $entityManager
-                ->createQuery("DELETE FROM {$entity} WHERE serverID = :serverID")
-                ->setParameter('serverID', $serverID)
-                ->execute();
+        foreach ($entities as $entityClass) {
+            $entities = $this->getDoctrine()
+                ->getRepository($entityClass)
+                ->findBy(['serverID' => $serverID]);
+            foreach ($entities as $entity) {
+                $entityManager->remove($entity);
+                $entityManager->flush();
+            }
         }
 
         return new XmlResponse((object) ['reset' => true]);
