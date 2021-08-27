@@ -3,6 +3,12 @@
 This project and associated docker containers provide a mock of the main BigBlueButton server and can be used for
 testing of BigBlueButton integrations.
 
+All endpoints must be prefixed with a serverID to allow for parallel runs, for example:
+
+```
+http://localhost:8001/someServerID/api
+```
+
 In addition to the standard endpoints, additional endpoints are provided for setting up data which a test requires or expects:
 ```
 /backoffice/createMeeting

@@ -115,6 +115,11 @@ class Meeting
      */
     private $recordings;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $serverID;
+
     public function __construct()
     {
         $this->createTime = new \DateTime();
@@ -453,6 +458,18 @@ class Meeting
                 $recording->setMeeting(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getServerID(): ?string
+    {
+        return $this->serverID;
+    }
+
+    public function setServerID(string $serverID): self
+    {
+        $this->serverID = $serverID;
 
         return $this;
     }

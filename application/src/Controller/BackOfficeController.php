@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use stdClass;
 
 /**
- * @Route ("/backoffice")
+ * @Route ("/{serverID}/backoffice")
  */
 class BackOfficeController extends DataController
 {
@@ -30,9 +30,10 @@ class BackOfficeController extends DataController
     /**
      * @Route("/createMeeting", name="backOfficeMeetingCreate")
      */
-    public function backOfficeMeetingCreate(Request $request): XmlResponse
+    public function backOfficeMeetingCreate(string $serverID, Request $request): XmlResponse
     {
         $meeting = new Meeting();
+        $meeting->setServerID($serverID);
         $meeting->setMeetingId($request->query->get('meetingID'));
         $meeting->setAttendeePW($request->query->get('attendeePW'));
         $meeting->setModeratorPW($request->query->get('moderatorPW'));
@@ -98,15 +99,16 @@ class BackOfficeController extends DataController
     /**
      * @Route("/createRecording", name="backOfficeRecordingCreate")
      */
-    public function backOfficeRecordingCreate(Request $request): XmlResponse
+    public function backOfficeRecordingCreate(string $serverID, Request $request): XmlResponse
     {
         $meetingID = $request->query->get('meetingID');
-        $meeting = $this->findRoomConfiguration($meetingID);
+        $meeting = $this->findRoomConfiguration($serverID, $meetingID);
         if (empty($meeting)) {
             return $this->handleRoomNotFound($meetingID);
         }
 
         $recording = new Recording();
+        $recording->setServerID($serverID);
         $meeting->addRecording($recording);
 
         if ($request->query->has('recordID')) {
@@ -140,11 +142,13 @@ class BackOfficeController extends DataController
     /**
      * @Route("/recordings", name="backOfficeListRecordings")
      */
-    public function backOfficeListRecordings(): XmlResponse
+    public function backOfficeListRecordings(string $serverID): XmlResponse
     {
         $entities = $this->getDoctrine()
-             ->getRepository(Recording::class)
-             ->findAll();
+            ->getRepository(Recording::class)
+            ->findBy([
+                'serverID' => $serverID,
+            ]);
 
         $items = array_map(function($entity): array {
             return $entity->getRecordingInfo();
@@ -156,11 +160,13 @@ class BackOfficeController extends DataController
     /**
      * @Route("/meetings", name="backOfficeListMeetings")
      */
-    public function backOfficeListMeetings(): XmlResponse
+    public function backOfficeListMeetings(string $serverID): XmlResponse
     {
         $meetingEntities = $this->getDoctrine()
-             ->getRepository(Meeting::class)
-             ->findAll();
+            ->getRepository(Meeting::class)
+            ->findBy([
+                'serverID' => $serverID,
+            ]);
 
         $meetings = array_map(function($meeting): stdClass {
             return $meeting->getMeetingInfo();
@@ -172,12 +178,14 @@ class BackOfficeController extends DataController
     /**
      * @Route("/sendNotifications")
      */
-    public function sendNotifications(): XmlResponse
+    public function sendNotifications(string $serverID): XmlResponse
     {
         $entities = $this->getDoctrine()
             ->getRepository(Recording::class)
-        ->findAll();
-            //->findBy(['brokerNotified' => false]);
+            ->findBy([
+                'serverID' => $serverID,
+                'brokerNotified' => false,
+            ]);
 
         $client = HttpClient::create();
         $entityManager = $this->getDoctrine()->getManager();
@@ -216,7 +224,7 @@ class BackOfficeController extends DataController
     /**
      * @Route("/reset", name="backOfficeReset")
      */
-    public function backOfficeReset(): XmlResponse
+    public function backOfficeReset(string $serverID): XmlResponse
     {
         $entities = [
             Attendee::class,
@@ -226,7 +234,10 @@ class BackOfficeController extends DataController
 
         $entityManager = $this->getDoctrine()->getManager();
         foreach ($entities as $entity) {
-            $entityManager->createQuery("DELETE FROM {$entity}")->execute();
+            $entityManager
+                ->createQuery("DELETE FROM {$entity} WHERE serverID = :serverID")
+                ->setParameter('serverID', $serverID)
+                ->execute();
         }
 
         return new XmlResponse((object) ['reset' => true]);

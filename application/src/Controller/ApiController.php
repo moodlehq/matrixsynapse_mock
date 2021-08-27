@@ -18,7 +18,7 @@ use stdClass;
 /**
  * API Controller to serve a mock of the BigBlueButton API.
  *
- * @Route("/api")
+ * @Route("/{serverID}/api")
  */
 class ApiController extends DataController
 {
@@ -35,10 +35,10 @@ class ApiController extends DataController
     /**
      * @Route("/getMeetingInfo", name="meetingInfo")
      */
-    public function meetingInfo(Request $request): XmlResponse
+    public function meetingInfo(string $serverID, Request $request): XmlResponse
     {
         $meetingID = $request->query->get('meetingID');
-        $meeting = $this->findRoomConfiguration($meetingID);
+        $meeting = $this->findRoomConfiguration($serverID, $meetingID);
         if (empty($meeting)) {
             return $this->handleRoomNotFound($meetingID);
         }
@@ -49,10 +49,10 @@ class ApiController extends DataController
     /**
      * @Route("/end", name="meetingEnd")
      */
-    public function meetingEnd(Request $request): XmlResponse
+    public function meetingEnd(string $serverID, Request $request): XmlResponse
     {
         $meetingID = $request->query->get('meetingID');
-        $meeting = $this->findRoomConfiguration($meetingID);
+        $meeting = $this->findRoomConfiguration($serverID, $meetingID);
         if (empty($meeting)) {
             return $this->handleRoomNotFound($meetingID);
         }
@@ -77,7 +77,7 @@ class ApiController extends DataController
     /**
      * @Route("/create", name="meetingCreate")
      */
-    public function meetingCreate(Request $request): XmlResponse
+    public function meetingCreate(string $serverID, Request $request): XmlResponse
     {
         $meeting = new Meeting();
         $meeting->setMeetingId($request->query->get('meetingID'));
@@ -104,10 +104,10 @@ class ApiController extends DataController
     /**
      * @Route("/join", name="meetingJoin")
      */
-    public function meetingJoin(Request $request): Response
+    public function meetingJoin(string $serverID, Request $request): Response
     {
         $meetingID = $request->query->get('meetingID');
-        $meeting = $this->findRoomConfiguration($meetingID);
+        $meeting = $this->findRoomConfiguration($serverID, $meetingID);
         if (empty($meeting)) {
             return $this->handleRoomNotFound($meetingID);
         }
@@ -145,12 +145,14 @@ class ApiController extends DataController
     /**
      * @Route("/getRecordings", name="recordingsGet")
      */
-    public function recordingsGet(Request $request): XmlResponse
+    public function recordingsGet(string $serverID, Request $request): XmlResponse
     {
-        $filter = [];
+        $filter = [
+            'serverID' => $serverID,
+        ];
 
         if ($request->query->has('meetingID') && $meetingID = $request->query->get('meetingID')) {
-            $meeting = $this->findRoomConfiguration($meetingID);
+            $meeting = $this->findRoomConfiguration($serverID, $meetingID);
             if (empty($meeting)) {
                 return $this->handleRoomNotFound($meetingID);
             }
@@ -179,12 +181,15 @@ class ApiController extends DataController
     /**
      * @Route("/updateRecordings", name="recordingsUpdate")
      */
-    public function recordingsUpdate(Request $request): XmlResponse
+    public function recordingsUpdate(string $serverID, Request $request): XmlResponse
     {
         $recordID = $request->query->get('recordID');
         $recording = $this->getDoctrine()
-             ->getRepository(Recording::class)
-             ->findOneBy(['recordID' => $recordID]);
+            ->getRepository(Recording::class)
+            ->findOneBy([
+                'serverID' => $serverID,
+                'recordID' => $recordID,
+            ]);
 
         if (empty($recording)) {
             return new ErrorResponse(
@@ -222,12 +227,15 @@ class ApiController extends DataController
     /**
      * @Route("/deleteRecordings", name="recordingsDelete")
      */
-    public function recordingsDelete(Request $request): XmlResponse
+    public function recordingsDelete(string $serverID, Request $request): XmlResponse
     {
         $recordID = $request->query->get('recordID');
         $recording = $this->getDoctrine()
-             ->getRepository(Recording::class)
-             ->findOneBy(['recordID' => $recordID]);
+            ->getRepository(Recording::class)
+            ->findOneBy([
+                'serverID' => $serverID,
+                'recordID' => $recordID,
+            ]);
 
         if (empty($recording)) {
             return new ErrorResponse(

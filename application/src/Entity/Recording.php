@@ -89,6 +89,11 @@ class Recording
      */
     private $brokerNotified = false;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $serverID;
+
     public function __construct()
     {
         $this->startTime = new \DateTime();
@@ -351,6 +356,18 @@ class Recording
     public function setBrokerNotified(bool $brokerNotified): self
     {
         $this->brokerNotified = $brokerNotified;
+
+        return $this;
+    }
+
+    public function getServerID(): ?string
+    {
+        return $this->serverID;
+    }
+
+    public function setServerID(string $serverID): self
+    {
+        $this->serverID = $serverID;
 
         return $this;
     }

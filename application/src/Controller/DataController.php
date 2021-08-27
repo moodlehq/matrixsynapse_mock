@@ -37,11 +37,14 @@ abstract class DataController extends AbstractController
         );
     }
 
-    protected function findRoomConfiguration(?string $meetingID): ?Meeting
+    protected function findRoomConfiguration(string $serverID, ?string $meetingID): ?Meeting
     {
         $meeting = $this->getDoctrine()
              ->getRepository(Meeting::class)
-             ->findOneBy(['meetingID' => $meetingID]);
+             ->findOneBy([
+                 'serverID' => $serverID,
+                 'meetingID' => $meetingID,
+             ]);
 
         return $meeting;
     }

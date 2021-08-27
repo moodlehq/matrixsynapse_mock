@@ -73,6 +73,11 @@ class Attendee
      */
     private $meetingID;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $serverID;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -215,6 +220,18 @@ class Attendee
     public function setMeetingID(?Meeting $meetingID): self
     {
         $this->meetingID = $meetingID;
+
+        return $this;
+    }
+
+    public function getServerID(): ?string
+    {
+        return $this->serverID;
+    }
+
+    public function setServerID(string $serverID): self
+    {
+        $this->serverID = $serverID;
 
         return $this;
     }
