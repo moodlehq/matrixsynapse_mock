@@ -79,24 +79,31 @@ class ApiController extends DataController
      */
     public function meetingCreate(string $serverID, Request $request): XmlResponse
     {
-        $meeting = new Meeting();
-        $meeting->setMeetingId($request->query->get('meetingID'));
-        $meeting->setAttendeePW($request->query->get('attendeePW'));
-        $meeting->setModeratorPW($request->query->get('moderatorPW'));
-        $meeting->setMeetingName($request->query->get('name'));
+        // We check if the meeting does not already exists.
+        $meetingID = $request->query->get('meetingID');
+        $meeting = $this->findRoomConfiguration($serverID, $meetingID);
 
-        if ($request->query->has('voiceBridge')) {
-            $meeting->setVoiceBridge($request->query->get('voiceBridge'));
+        if (empty($meeting)) {
+            $meeting = new Meeting();
+            $meeting->setMeetingId($request->query->get('meetingID'));
+            $meeting->setAttendeePW($request->query->get('attendeePW'));
+            $meeting->setModeratorPW($request->query->get('moderatorPW'));
+            $meeting->setMeetingName($request->query->get('name'));
+            $meeting->setServerID($serverID);
+
+            if ($request->query->has('voiceBridge')) {
+                $meeting->setVoiceBridge($request->query->get('voiceBridge'));
+            }
+
+            if ($request->query->has('dialNumber')) {
+                $meeting->setDialNumber($request->query->get('dialNumber'));
+            }
+            $meeting->setMetadata($this->getMetadataFromRequest($request));
+
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($meeting);
+            $entityManager->flush();
         }
-
-        if ($request->query->has('dialNumber')) {
-            $meeting->setDialNumber($request->query->get('dialNumber'));
-        }
-        $meeting->setMetadata($this->getMetadataFromRequest($request));
-
-        $entityManager = $this->getDoctrine()->getManager();
-        $entityManager->persist($meeting);
-        $entityManager->flush();
 
         return new MeetingSummaryResponse($meeting);
     }
