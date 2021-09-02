@@ -124,6 +124,7 @@ class ApiController extends DataController
         }
 
         $attendee = new Attendee();
+        $attendee->setServerID($serverID);
         $attendee->setUserId($request->query->get('userID'));
         $attendee->setFullName($request->query->get('fullName'));
 
@@ -142,9 +143,15 @@ class ApiController extends DataController
         $entityManager->persist($meeting);
         $entityManager->flush();
 
+        $logoutURL = null;
+        if ($request->query->has('logoutURL')) {
+            $logoutURL = $request->query->get('logoutURL');
+        }
+
         return $this->render('mocked_meeting.html.twig', [
             'meeting' => $meeting,
             'attendee' => $attendee,
+            'logoutURL' => $logoutURL,
         ]);
 
     }
