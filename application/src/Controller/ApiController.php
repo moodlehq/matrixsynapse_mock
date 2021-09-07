@@ -166,11 +166,15 @@ class ApiController extends DataController
         ];
 
         if ($request->query->has('meetingID') && $meetingID = $request->query->get('meetingID')) {
-            $meeting = $this->findRoomConfiguration($serverID, $meetingID);
-            if (empty($meeting)) {
-                return $this->handleRoomNotFound($meetingID);
+            $meetings = explode(',', $meetingID);
+            $filter['meeting'] = [];
+            foreach ($meetings as $mID) {
+                $meeting = $this->findRoomConfiguration($serverID, $mID);
+                if (empty($meeting)) {
+                    return $this->handleRoomNotFound($mID);
+                }
+                $filter['meeting'][] = $meeting;
             }
-            $filter['meeting'] = $meeting;
         } else if ($request->query->has('recordID') && $recordID = $request->query->get('recordID')) {
             $filter['recordID'] = explode(',', $recordID);
         }
