@@ -84,6 +84,7 @@ class BackOfficeController extends DataController
                 $attendee = new Attendee();
                 $attendee->setUserId("Moderator {$i}");
                 $attendee->setFullName("Moderator {$i}");
+                $attendee->setServerID($serverID);
 
                 $entityManager->persist($attendee);
                 $meeting->addAttendee($attendee);
