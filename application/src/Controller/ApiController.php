@@ -63,7 +63,12 @@ class ApiController extends DataController
         }
 
         $entityManager = $this->getDoctrine()->getManager();
-        $entityManager->remove($meeting);
+        // Remove all attendees and set running to false.
+        foreach($meeting->getAttendees() as $attendee) {
+            $meeting->removeAttendee($attendee);
+        }
+        $meeting->setRunning(false);
+        $entityManager->persist($meeting);
         $entityManager->flush();
 
         return new MessageResponse(
