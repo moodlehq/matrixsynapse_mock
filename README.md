@@ -50,3 +50,17 @@ Notes:
 
 * The database is intended to be **disposable**. Migrations are not guaranteed to work. Please be prepared to drop and
   recreate the database.
+
+
+## Publishing status
+
+Note : if you want to publish on your own repository (being Docker Hub or Git Container Registry), you need to define the
+following secrets [following secrets ](https://docs.github.com/en/actions/security-guides/encrypted-secrets):
+* DOCKERHUB_OWNER
+* DOCKERHUB_PASSWORD
+* DOCKERHUB_TOKEN
+* DOCKERHUB_USERNAME
+* GH_OWNER
+* GH_TOKEN
+
+[![Docker multiarch publish](https://github.com/call-learning/bigbluebutton_mock/actions/workflows/build_and_publish.yml/badge.svg)](https://github.com/call-learning/bigbluebutton_mock/actions/workflows/build_and_publish.yml)
