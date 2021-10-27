@@ -106,7 +106,7 @@ class Meeting
     private $running = false;
 
     /**
-     * @ORM\OneToMany(targetEntity=Attendee::class, mappedBy="meetingID", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=Attendee::class, mappedBy="meetingID", orphanRemoval=true, fetch="EAGER")
      */
     private $attendees;
 
@@ -129,6 +129,17 @@ class Meeting
     }
 
     public function getMeetingInfo(): stdClass {
+        // Filter out attendee's object as it does not translate well in XML as such.
+        $attendees = $this->getAttendees()->toArray();
+        if ($attendees) {
+            foreach ($attendees as $key => $val) {
+                $attendee = (array) $val;
+                $attendee =
+                    array_intersect_key(['userID', 'fullName', 'role', 'isPresenter', 'isListeningOnly', 'hasVideo', 'clientType'],
+                        $attendee);
+                $attendees[$key] = (object) $attendee;
+            }
+        }
         return (object) [
             'meetingName' => $this->meetingName,
             'meetingID' => $this->meetingID,
@@ -150,7 +161,7 @@ class Meeting
             'listenerCount' => $this->getListenerCount(),
             'videoCount' => $this->getVideoCount(),
             'moderatorCount' => $this->getModeratorCount(),
-            'attendees' => [],
+            'attendees' => $attendees,
             'metadata' => $this->metadata,
             'duration' => (new \DateTime())->diff($this->createTime)->s,
         ];
