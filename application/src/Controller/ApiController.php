@@ -57,7 +57,11 @@ class ApiController extends DataController
             return $this->handleRoomNotFound($meetingID);
         }
 
-        $password = $request->query->get('ppassword');
+        if (!$meeting->getRunning()) {
+            // The BBB sends an error meeting not found when the meeting is already ended.
+            return $this->handleRoomNotFound($meetingID);
+        }
+
         if (!$meeting->checkModeratorPW($request->query->get('password'))) {
             return $this->handleAccessDenied();
         }
