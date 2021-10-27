@@ -1,28 +1,49 @@
 name: Docker multiarch publish
 
 on: push
-
 env:
   REPOSITORY: bigbluebutton_mock
-  DOCKERHUB_OWNER: andrewnicols
-  GH_OWNER: andrewnicols
-
 jobs:
-  Build:
-    # Completely avoid forks to try this workflow.
-    if: github.repository_owner == 'andrewnicols'
+  check-env:
+    # We need to check if at least one of the repository is defined
     runs-on: ubuntu-latest
+    outputs:
+      checks: ${{ steps.checks.outputs.defined }}
+    steps:
+      - id: checks
+        env:
+          GH_OWNER: ${{ secrets.GH_OWNER }}
+          DOCKERHUB_OWNER: ${{ secrets.DOCKERHUB_OWNER }}
+        if: env.GH_OWNER != '' || env.DOCKERHUB_OWNER != ''
+        run: echo '::set-output name=defined::true'
+  build-docker:
+    needs: [check-env]
+    # Completely avoid forks to try this workflow.
+    runs-on: ubuntu-latest
+    env:
+      GH_OWNER: ${{ secrets.GH_OWNER }}
+      DOCKERHUB_OWNER: ${{ secrets.DOCKERHUB_OWNER }}
+    if: needs.check-env.outputs.checks == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      # Calculate the tags to be pussed to the registries.
-      - name: Calculate image tag names
-        id: calculatetags
+      # Calculate the tags to be pushed to the registries.
+      - name: Calculate image tag names for Dockerhub
+        if: env.GH_OWNER != ''
+        id: calculatetagsdhub
         uses: docker/metadata-action@v3
         with:
           images: |
             ${{ env.DOCKERHUB_OWNER }}/${{ env.REPOSITORY }}
+          tags: |
+            type=raw,value={{branch}}
+            type=ref,event=tag
+      - name: Calculate image tag names for GCR
+        if: env.GH_OWNER != ''
+        id: calculatetagsgcr
+        uses: docker/metadata-action@v3
+        with:
+          images: |
             ghcr.io/${{ env.GH_OWNER }}/${{ env.REPOSITORY }}
           tags: |
             type=raw,value={{branch}}
@@ -37,6 +58,7 @@ jobs:
 
       # https://github.com/docker/login-action#docker-hub
       - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_OWNER != '' }}
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -44,6 +66,7 @@ jobs:
 
       # https://github.com/docker/login-action#github-container-registry
       - name: Login to GitHub Container Registry
+        if: env.DOCKERHUB_OWNER != ''
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
@@ -52,14 +75,25 @@ jobs:
 
 
       # https://github.com/docker/build-push-action#multi-platform-image
-      - name: Build and push to Docker Hub and Github registries
+      - name: Build and push to Docker Hub
+        if: env.DOCKERHUB_OWNER != ''
         uses: docker/build-push-action@v2
         with:
           context: .
           file: Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.calculatetags.outputs.tags }}
+          tags: ${{ steps.calculatetagsdhub.outputs.tags }}
+
+      - name: Build and push to Github registries
+        if: ${{ env.GH_OWNER != '' }}
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.calculatetagsgcr.outputs.tags }}
 
       # https://github.com/peter-evans/dockerhub-description
       # It's horrible that we need to use password here instead of PAT, because
@@ -68,9 +102,9 @@ jobs:
       # Link: https://github.com/peter-evans/dockerhub-description/issues/10
       # Note that we only update the description with the master branch version.
       - name: Set Docker Hub description from README.md
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && env.DOCKERHUB_OWNER != ''
         uses: peter-evans/dockerhub-description@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          repository: ${{ env.DOCKERHUB_OWNER }}/${{ env.REPOSITORY }}
+          repository: ${{ secrets.DOCKERHUB_OWNER }}/${{ env.REPOSITORY }}
