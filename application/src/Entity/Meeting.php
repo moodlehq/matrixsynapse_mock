@@ -413,10 +413,7 @@ class Meeting
 
     public function getParticipantCount(): int
     {
-        return count($this->getAttendees()->filter(function($attendee): bool
-        {
-            return $attendee->isParticipant();
-        }));
+        return count($this->getAttendees());
     }
 
     public function getModeratorCount(): int
