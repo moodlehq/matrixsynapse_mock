@@ -71,7 +71,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ env.GH_OWNER }}
-          password: ${{ secrets.GH_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
 
       # https://github.com/docker/build-push-action#multi-platform-image
@@ -100,9 +100,9 @@ jobs:
       # that's only available via CLI what defeats 2FA. Anyway, we need to
       # auto-update the description, so using it (till available via PAT).
       # Link: https://github.com/peter-evans/dockerhub-description/issues/10
-      # Note that we only update the description with the master branch version.
+      # Note that we only update the description with the main branch version.
       - name: Set Docker Hub description from README.md
-        if: github.ref == 'refs/heads/master' && env.DOCKERHUB_OWNER != ''
+        if: github.ref == 'refs/heads/main' && env.DOCKERHUB_OWNER != ''
         uses: peter-evans/dockerhub-description@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

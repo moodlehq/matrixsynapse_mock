@@ -61,6 +61,5 @@ following secrets [following secrets ](https://docs.github.com/en/actions/securi
 * DOCKERHUB_TOKEN
 * DOCKERHUB_USERNAME
 * GH_OWNER
-* GH_TOKEN
 
-[![Docker multiarch publish](https://github.com/call-learning/bigbluebutton_mock/actions/workflows/build_and_publish.yml/badge.svg)](https://github.com/call-learning/bigbluebutton_mock/actions/workflows/build_and_publish.yml)
+[![Docker multiarch publish](https://github.com/moodlehq/bigbluebutton_mock/actions/workflows/build_and_publish.yml/badge.svg)](https://github.com/moodlehq/bigbluebutton_mock/actions/workflows/build_and_publish.yml)
