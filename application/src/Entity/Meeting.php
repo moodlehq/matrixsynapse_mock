@@ -452,9 +452,8 @@ class Meeting
     {
         if (!$this->recordings->contains($recording)) {
             $this->recordings[] = $recording;
-            $recording->setMeeting($this);
         }
-
+        $recording->setMeeting($this);
         return $this;
     }
 
