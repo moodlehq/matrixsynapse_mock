@@ -1,4 +1,4 @@
-FROM php:8.0
+FROM php:8.0-apache-bullseye
 
 LABEL maintainer="Andrew Lyons <andrew@nicols.co.uk>" \
     org.opencontainers.image.source="https://github.com/andrewnicols/bigbluebutton_mock"
