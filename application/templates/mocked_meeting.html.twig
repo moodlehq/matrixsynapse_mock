@@ -7,6 +7,11 @@
         <div data-identifier="meetingName">{{ meeting.meetingName }}</div>
         <div data-identifier="fullName">{{ attendee.fullName }}</div>
         <div data-identifier="attendeeRole">{{ attendee.role }}</div>
+        <ul data-identifier="lockSettings">
+            {% for key, value in lockSettings  %}
+                <li> {{ key }} : {{ value ? 'enabled':'disabled' }}</li>
+            {% endfor %}
+        </ul>
         <a href="{{ logoutURL }}">Leave Meeting</a>
         <a href="{{ logoutURL }}">End Meeting</a>
     </body>

@@ -3,17 +3,16 @@
 namespace App\Controller;
 
 use App\Component\HttpFoundation\ErrorResponse;
-use App\Component\HttpFoundation\MessageResponse;
 use App\Component\HttpFoundation\MeetingInfoResponse;
 use App\Component\HttpFoundation\MeetingSummaryResponse;
+use App\Component\HttpFoundation\MessageResponse;
 use App\Component\HttpFoundation\XmlResponse;
 use App\Entity\Attendee;
 use App\Entity\Meeting;
 use App\Entity\Recording;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use stdClass;
 
 /**
  * API Controller to serve a mock of the BigBlueButton API.
@@ -83,6 +82,18 @@ class ApiController extends DataController
         );
     }
 
+    const LOCK_SETTINGS_DATA = [
+        'disableCam',
+        'disableMic',
+        'disablePrivateChat',
+        'disablePublicChat',
+        'disableNote',
+        'lockedLayout',
+        'hideUserList',
+        'lockOnJoin',
+        'lockOnJoinConfigurable'
+    ];
+
     /**
      * @Route("/create", name="meetingCreate")
      */
@@ -108,6 +119,14 @@ class ApiController extends DataController
                 $meeting->setDialNumber($request->query->get('dialNumber'));
             }
             $meeting->setMetadata($this->getMetadataFromRequest($request));
+
+            // Lock settings.
+            foreach (self::LOCK_SETTINGS_DATA as $lockName) {
+                $lockSettingName = 'lockSettings' . ucfirst($lockName);
+                if ($request->query->has($lockSettingName)) {
+                    $meeting->setLockSetting($lockName, $request->query->get($lockSettingName));
+                }
+            }
 
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager->persist($meeting);
@@ -157,10 +176,16 @@ class ApiController extends DataController
             $logoutURL = $request->query->get('logoutURL');
         }
 
+        $lockSettings = [];
+        foreach(self::LOCK_SETTINGS_DATA as $lockName) {
+            $lockSettings[$lockName] = $meeting->getLockSetting($lockName);
+        }
+
         return $this->render('mocked_meeting.html.twig', [
             'meeting' => $meeting,
             'attendee' => $attendee,
             'logoutURL' => $logoutURL,
+            'lockSettings' => $lockSettings
         ]);
 
     }
