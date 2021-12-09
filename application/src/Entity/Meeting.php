@@ -51,6 +51,51 @@ class Meeting
     private $meetingName;
 
     /**
+     * @ORM\Column(type="boolean")
+     */
+    private $disableCam = false;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $disableMic = false;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $disablePrivateChat = false;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $disablePublicChat = false;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $disableNote= false;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $lockedLayout = false;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $hideUserList = false;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $lockOnJoin = true;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $lockOnJoinConfigurable = false;
+
+    /**
      * @ORM\Column(type="json")
      */
     private $metadata = [
@@ -477,7 +522,20 @@ class Meeting
     public function setServerID(string $serverID): self
     {
         $this->serverID = $serverID;
-
         return $this;
+    }
+
+    public function setLockSetting(string $lockName, bool $value) {
+        if (property_exists($this, $lockName)) {
+            $this->$lockName = $value;
+        }
+    }
+
+    public function getLockSetting(string $lockName): bool {
+        if (property_exists($this, $lockName)) {
+            // If lockOnJoin not set to true, this is false for every lock.
+            return $this->lockOnJoin && $this->$lockName;
+        }
+        return false;
     }
 }
