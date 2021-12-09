@@ -179,7 +179,7 @@ class BackOfficeController extends DataController
     /**
      * @Route("/sendNotifications")
      */
-    public function sendNotifications(string $serverID): XmlResponse
+    public function sendNotifications(Request $request, string $serverID): XmlResponse
     {
         $entities = $this->getDoctrine()
             ->getRepository(Recording::class)
@@ -191,12 +191,15 @@ class BackOfficeController extends DataController
         $client = HttpClient::create();
         $entityManager = $this->getDoctrine()->getManager();
 
+        // Get the secret to use.
+        $secret = $request->get('secret', self::DEFAULT_SHARED_SECRET);
+
         $notified = [];
         foreach ($entities as $entity) {
             $url = htmlspecialchars_decode($entity->getMetadataValue('bn-recording-ready-url'));
             $jwtparams = JWT::encode((object) [
                 'record_id' => $entity->getRecordID(),
-            ], self::DEFAULT_SHARED_SECRET, 'HS256');
+            ], $secret, 'HS256');
 
             $response = $client->request('GET', $url, [
                 'query' => [
