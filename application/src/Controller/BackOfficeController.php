@@ -25,7 +25,7 @@ class BackOfficeController extends DataController
      *
      * @var string
      */
-    const DEFAULT_SHARED_SECRET = '8cd8ef52e8e101574e400365b55e11a6';
+    const DEFAULT_SHARED_SECRET = '0b21fcaf34673a8c3ec8ed877d76ae34';
 
     /**
      * @Route("/createMeeting", name="backOfficeMeetingCreate")
