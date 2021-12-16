@@ -9,7 +9,6 @@ use App\Entity\Meeting;
 use App\Entity\Recording;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use stdClass;
@@ -127,6 +126,18 @@ class BackOfficeController extends DataController
         if ($request->query->has('isBreakout')) {
             $recording->setIsBreakout(!empty($request->query->get('isBreakout')));
         }
+
+        if ($request->query->has('isBreakout')) {
+            $recording->setIsBreakout(!empty($request->query->get('isBreakout')));
+        }
+
+        if ($request->query->has('startTime')) {
+            $recording->setStartTime(new \DateTime("@" . $request->query->get('startTime')));
+        }
+        if ($request->query->has('endTime')) {
+            $recording->setEndTime(new \DateTime("@" . $request->query->get('endTime')));
+        }
+
 
         $recording->setMetadata($this->getRecordingMetadataFromRequest($request));
 
