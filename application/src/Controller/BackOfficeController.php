@@ -9,6 +9,7 @@ use App\Entity\Meeting;
 use App\Entity\Recording;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use stdClass;
@@ -33,7 +34,13 @@ class BackOfficeController extends DataController
     {
         $meeting = new Meeting();
         $meeting->setServerID($serverID);
-        $meeting->setMeetingId($request->query->get('meetingID'));
+        // Deal first with Recording that are part of a breakout room meeting.
+        // We autogenerate a meeting ID for this meeting.
+        if (!$request->query->has('meetingID')) {
+            $meeting->setMeetingId(sha1(rand())); // Random ID.
+        } else {
+            $meeting->setMeetingId($request->query->get('meetingID'));
+        }
         $meeting->setAttendeePW($request->query->get('attendeePW'));
         $meeting->setModeratorPW($request->query->get('moderatorPW'));
         $meeting->setRunning(true);
@@ -90,6 +97,30 @@ class BackOfficeController extends DataController
             }
         }
 
+        if ($request->query->has('isBreakout') && ((int)$request->query->get('isBreakout'))) {
+           $meeting->setIsBreakout(true);
+           if ($request->query->has('parentMeetingID')) {
+                $parentMeeting = $this->getDoctrine()
+                    ->getRepository(Meeting::class)
+                    ->findOneBy(['meetingID' => $request->query->get('parentMeetingID')]);
+                $meeting->setParentMeeting($parentMeeting);
+            }
+            if ($request->query->has('freeJoin')) {
+                $meeting->setIsFreeJoin($request->query->get('freeJoin'));
+            }
+            if ($request->query->has('breakoutRoomsEnabled')) {
+                $meeting->setIsBreakoutRoomsEnabled($request->query->get('breakoutRoomsEnabled'));
+            }
+            if ($request->query->has('breakoutRoomsPrivateChatEnabled')) {
+                $meeting->setIsBreakoutRoomsPrivateChatEnabled($request->query->get('breakoutRoomsPrivateChatEnabled'));
+            }
+            if ($request->query->has('breakoutRoomsRecord')) {
+                $meeting->setIsBreakoutRoomsRecord($request->query->get('breakoutRoomsRecord'));
+            }
+            if ($request->query->has('sequence')) {
+                $meeting->setBreakoutSequence($request->query->get('sequence'));
+            }
+        }
         $entityManager->persist($meeting);
         $entityManager->flush();
 
@@ -101,8 +132,31 @@ class BackOfficeController extends DataController
      */
     public function backOfficeRecordingCreate(string $serverID, Request $request): XmlResponse
     {
-        $meetingID = $request->query->get('meetingID');
-        $meeting = $this->findRoomConfiguration($serverID, $meetingID);
+        $meeting = null;
+        // Deal first with Recording that are part of a breakout room meeting.
+        // We find the right meeting through the sequence and parentID.
+        if (!$request->query->has('meetingID')) {
+            // This is a recording from a breakout Room.
+            $sequence = 1;
+            if ($request->query->has('sequence')) {
+                $sequence = (int) $request->query->get('sequence');
+            }
+            if (!$request->query->has('parentMeetingID')) {
+                return $this->handleParentRoomNotFound('');
+            }
+            $parentMeetingID = $request->query->get('parentMeetingID');
+
+            $parentMeeting = $this->findRoomConfiguration($serverID, $parentMeetingID);
+            foreach($parentMeeting->getChildMeetings() as $childMeeting) {
+                if (!(--$sequence)) {
+                    $meeting = $childMeeting;
+                    break;
+                }
+            }
+        } else {
+            $meetingID = $request->query->get('meetingID');
+            $meeting = $this->findRoomConfiguration($serverID, $meetingID);
+        }
         if (empty($meeting)) {
             return $this->handleRoomNotFound($meetingID);
         }
@@ -123,21 +177,12 @@ class BackOfficeController extends DataController
             $recording->setProtected(!empty($request->query->get('protect')));
         }
 
-        if ($request->query->has('isBreakout')) {
-            $recording->setIsBreakout(!empty($request->query->get('isBreakout')));
-        }
-
-        if ($request->query->has('isBreakout')) {
-            $recording->setIsBreakout(!empty($request->query->get('isBreakout')));
-        }
-
-        if ($request->query->has('startTime')) {
+       if ($request->query->has('startTime')) {
             $recording->setStartTime(new \DateTime("@" . $request->query->get('startTime')));
         }
         if ($request->query->has('endTime')) {
             $recording->setEndTime(new \DateTime("@" . $request->query->get('endTime')));
         }
-
 
         $recording->setMetadata($this->getRecordingMetadataFromRequest($request));
 
