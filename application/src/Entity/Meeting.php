@@ -165,6 +165,49 @@ class Meeting
      */
     private $serverID;
 
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $isBreakout = false;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $freeJoin = false;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $breakoutRoomsEnabled = true;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $breakoutRoomsPrivateChatEnabled = true;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $breakoutRoomsRecord = true;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $sequence = 0;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Meeting::class, inversedBy="childMeetings")
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private $parentMeeting = null;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Meeting::class, mappedBy="parentMeeting", orphanRemoval=true, fetch="EAGER")
+     */
+    private $childMeetings;
+
+
     public function __construct()
     {
         $this->createTime = new \DateTime();
@@ -185,7 +228,7 @@ class Meeting
                 $attendees[$key] = (object) $attendee;
             }
         }
-        return (object) [
+        $meetingInfo = (object) [
             'meetingName' => $this->meetingName,
             'meetingID' => $this->meetingID,
             //'internalMeetingID' => $this->internalMeetingID,
@@ -209,7 +252,26 @@ class Meeting
             'attendees' => $attendees,
             'metadata' => $this->metadata,
             'duration' => (new \DateTime())->diff($this->createTime)->s,
+            'isBreakout' => $this->isBreakout()
         ];
+        if ($this->hasSubMeetings()) {
+            $breakoutRooms = [];
+            foreach($this->getChildMeetings() as $childMeeting) {
+                $breakoutRooms[] = $childMeeting->getMeetingID();
+            }
+            $meetingInfo->breakoutRooms = (object) [
+                'forcexmlarraytype' => 'breakout',
+                'array' => $breakoutRooms,
+            ];
+        }
+        if ($this->isBreakout()) {
+            $meetingInfo->breakout = (object) [
+                'parentMeetingID' =>$this->getParentMeeting()->getMeetingID(),
+                'sequence'=> $this->getBreakoutSequence(),
+                'freeJoin' => $this->isFreeJoin()
+            ];
+        }
+        return $meetingInfo;
     }
 
     public function getMeetingSummary(): stdClass {
@@ -538,4 +600,117 @@ class Meeting
         }
         return false;
     }
+
+    public function isBreakout(): ?bool
+    {
+        return $this->isBreakout;
+    }
+
+    public function setIsBreakout(bool $val): self
+    {
+        $this->isBreakout = $val;
+        return $this;
+    }
+
+    public function isFreeJoin(): ?bool
+    {
+        return $this->freeJoin;
+    }
+
+    public function setIsFreeJoin(bool $val): self
+    {
+        $this->freeJoin = $val;
+        return $this;
+    }
+
+    public function isBreakoutRoomsEnabled(): ?bool
+    {
+        return $this->breakoutRoomsEnabled;
+    }
+
+    public function setIsBreakoutRoomsEnabled(bool $val): self
+    {
+        $this->breakoutRoomsEnabled = $val;
+        return $this;
+    }
+
+    public function isBreakoutRoomsPrivateChatEnabled(): ?bool
+    {
+        return $this->breakoutRoomsPrivateChatEnabled;
+    }
+
+    public function setIsBreakoutRoomsPrivateChatEnabled(bool $val): self
+    {
+        $this->breakoutRoomsPrivateChatEnabled = $val;
+        return $this;
+    }
+
+    public function isBreakoutRoomsRecord(): ?bool
+    {
+        return $this->breakoutRoomsRecord;
+    }
+
+    public function setIsBreakoutRoomsRecord(bool $val): self
+    {
+        $this->breakoutRoomsRecord = $val;
+        return $this;
+    }
+
+    public function getBreakoutSequence(): ?int
+    {
+        return $this->sequence;
+    }
+
+    public function setBreakoutSequence(int $val): self
+    {
+        $this->sequence = $val;
+        return $this;
+    }
+
+    public function addChildMeeting(Meeting $childMeeting): self
+    {
+        if (!$this->childMeetings->contains($childMeeting)) {
+            $this->childMeetings[] = $childMeeting;
+        }
+        $childMeeting->parentMeeting  = $this;
+        return $this;
+    }
+
+    public function removeChildMeeting(Meeting $childMeeting): self
+    {
+        if ($this->childMeetings->removeElement($childMeeting)) {
+            // set the owning side to null (unless already changed)
+            if ($childMeeting->getParentMeeting() === $this) {
+                $childMeeting->setParentMeeting(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection|Meeting[]
+     */
+    public function getChildMeetings(): Collection
+    {
+        return $this->childMeetings;
+    }
+
+    public function setParentMeeting(?Meeting $parentMeeting): self {
+        if ($parentMeeting) {
+            $parentMeeting->addChildMeeting($this);
+        } else {
+            $this->parentMeeting = null;
+        }
+        return $this;
+    }
+    public function getParentMeeting(): ?Meeting {
+        return $this->parentMeeting ;
+    }
+
+    public function hasSubMeetings(): ?bool
+    {
+        return !empty($this->childMeetings);
+    }
+
+
 }

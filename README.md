@@ -46,6 +46,10 @@ Run the project:
 
     symfony server:start --port=8001 --no-tls --allow-http
 
+Debugging:
+
+    XDEBUG_SESSION=1 symfony server:start --port=8001 --no-tls --allow-http
+
 Notes:
 
 * The database is intended to be **disposable**. Migrations are not guaranteed to work. Please be prepared to drop and

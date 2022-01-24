@@ -3,17 +3,9 @@
 namespace App\Controller;
 
 use App\Component\HttpFoundation\ErrorResponse;
-use App\Component\HttpFoundation\MessageResponse;
-use App\Component\HttpFoundation\MeetingInfoResponse;
-use App\Component\HttpFoundation\MeetingSummaryResponse;
-use App\Component\HttpFoundation\XmlResponse;
-use App\Entity\Attendee;
 use App\Entity\Meeting;
-use App\Entity\Recording;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use stdClass;
 
 abstract class DataController extends AbstractController
 {
@@ -22,6 +14,16 @@ abstract class DataController extends AbstractController
         return new ErrorResponse(
             'notFound',
             'We could not find a meeting with that meeting ID',
+            'FAILED',
+            404
+        );
+    }
+
+    protected function handleParentRoomNotFound(?string $meetingID): ErrorResponse
+    {
+        return new ErrorResponse(
+            'notFound',
+            'We could not find a parent meeting with that meeting ID',
             'FAILED',
             404
         );
@@ -40,13 +42,18 @@ abstract class DataController extends AbstractController
     protected function findRoomConfiguration(string $serverID, ?string $meetingID): ?Meeting
     {
         $meeting = $this->getDoctrine()
-             ->getRepository(Meeting::class)
-             ->findOneBy([
-                 'serverID' => $serverID,
-                 'meetingID' => $meetingID,
-             ]);
+            ->getRepository(Meeting::class)
+            ->findOneBy([
+                'serverID' => $serverID,
+                'meetingID' => $meetingID,
+            ]);
 
         return $meeting;
+    }
+
+    protected function getMetadataFromRequest(Request $request): array
+    {
+        return $this->getNamedMetadataFromRequest($request, $this->getBaseMetadata());
     }
 
     protected function getNamedMetadataFromRequest(Request $request, array $items, bool $fillDefaults = true): array
@@ -56,7 +63,7 @@ abstract class DataController extends AbstractController
             $paramName = "meta_{$itemName}";
             if ($request->query->has($paramName)) {
                 $data[$itemName] = $request->query->get($paramName);
-            } else if ($fillDefaults) {
+            } elseif ($fillDefaults) {
                 $data[$itemName] = $default;
             }
         }
@@ -77,11 +84,6 @@ abstract class DataController extends AbstractController
             'bbb-origin-tag' => "moodle-mod_bigbluebuttonbn (PLUGINVERSION)",
             'bbb-origin-version' => "RELEASE",
         ];
-    }
-
-    protected function getMetadataFromRequest(Request $request): array
-    {
-        return $this->getNamedMetadataFromRequest($request, $this->getBaseMetadata());
     }
 
     protected function getRecordingMetadataFromRequest(Request $request, bool $fillDefaults = true): array

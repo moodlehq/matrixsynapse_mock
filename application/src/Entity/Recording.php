@@ -101,7 +101,7 @@ class Recording
 
     public function getRecordingInfo(): array
     {
-        return [
+        $recordingInfo = [
             'meetingID' => $this->getMeeting()->getMeetingID(),
             'recordID' => $this->getRecordID(),
             'published' => $this->stringifyBool($this->published),
@@ -111,7 +111,21 @@ class Recording
             'participants' => $this->participants,
             'playback' => $this->getPlayback(),
             'metadata' => $this->getMetadata(),
+            'isBreakout' => $this->isBreakout()
         ];
+        if ($this->getMeeting()->hasSubMeetings()) {
+            $breakoutRooms = [];
+            foreach($this->getMeeting()->getChildMeetings() as $childMeeting) {
+                foreach($childMeeting->getRecordings() as $childRecording) {
+                    $breakoutRooms[] = $childRecording->getRecordID();
+                }
+            }
+            $recordingInfo['breakoutRooms'] = (object) [
+                'forcexmlarraytype' => 'breakoutRoom',
+                'array' => $breakoutRooms,
+            ];
+        }
+        return $recordingInfo;
     }
 
     public function getId(): ?int
@@ -148,9 +162,13 @@ class Recording
      */
     public function setRecordIDFromMeeting(): void
     {
+        $seed = $this->getMeeting()->getMeetingID();
+        if ($this->getMeeting()->isBreakout()) {
+            $seed .= $this->getMeeting()->getBreakoutSequence();
+        }
         $this->recordID = sprintf(
             "%s-%s",
-            md5($this->getMeeting()->getMeetingID()),
+            md5($seed),
             time() + rand(1, 100000)
         );
     }
@@ -295,19 +313,12 @@ class Recording
         return $this;
     }
 
-    public function getIsBreakout(): ?bool
+    public function isBreakout(): ?bool
     {
-        return $this->isBreakout;
+        return $this->getMeeting()->isBreakout();
     }
 
-    public function setIsBreakout(bool $isBreakout): self
-    {
-        $this->isBreakout = $isBreakout;
-
-        return $this;
-    }
-
-    public function getHeadless(): ?bool
+    public function isHeadless(): ?bool
     {
         return $this->headless;
     }
@@ -319,7 +330,7 @@ class Recording
         return $this;
     }
 
-    public function getImported(): ?bool
+    public function isImported(): ?bool
     {
         return $this->imported;
     }

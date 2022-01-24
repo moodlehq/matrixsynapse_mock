@@ -40,8 +40,12 @@ class XmlResponse extends Response
                 $value = array_values($value->array);
                 $subnode = $node->addChild($key);
                 foreach ($value as $val) {
-                    $arraynode = $subnode->addChild($newkey);
-                    $this->convertToXml($arraynode, $val);
+                    if(is_scalar($val)) {
+                        $subnode->addChild($newkey, $val);
+                    } else {
+                        $arraynode = $subnode->addChild($newkey);
+                        $this->convertToXml($arraynode, $val);
+                    }
                 }
 
             } else {
