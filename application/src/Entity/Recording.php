@@ -169,7 +169,7 @@ class Recording
         $this->recordID = sprintf(
             "%s-%s",
             md5($seed),
-            time() + rand(1, 100000)
+            time() + random_int(0, PHP_INT_MAX/2)
         );
     }
 
