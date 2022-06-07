@@ -71,7 +71,7 @@ class Attendee
      * @ORM\ManyToOne(targetEntity=Meeting::class, inversedBy="attendees")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $meetingID;
+    private $meeting;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -212,14 +212,14 @@ class Attendee
         return $this;
     }
 
-    public function getMeetingID(): ?Meeting
+    public function getMeeting(): ?Meeting
     {
-        return $this->meetingID;
+        return $this->meeting;
     }
 
-    public function setMeetingID(?Meeting $meetingID): self
+    public function setMeeting(?Meeting $meeting): self
     {
-        $this->meetingID = $meetingID;
+        $this->meeting = $meeting;
 
         return $this;
     }
