@@ -156,12 +156,20 @@ class ApiController extends DataController
         $attendee->setUserId($request->query->get('userID'));
         $attendee->setFullName($request->query->get('fullName'));
 
-        $password = $request->query->get('password');
-        if ($meeting->checkModeratorPW($password)) {
+        $ismoderator = false;
+        $role = $request->query->get('role');
+        if (!$role) {
+            $password = $request->query->get('password');
+            if ($meeting->checkModeratorPW($password)) {
+                $ismoderator = true;
+            } else if (!$meeting->checkAttendeePW($password)) {
+                return new XmlResponse((object) [], 'FAILED', 503);
+            }
+        }
+        $ismoderator = $ismoderator || $role === 'MODERATOR';
+        if ($ismoderator) {
             $attendee->setRole(Attendee::ROLE_MODERATOR);
             $attendee->setIsPresenter(true);
-        } else if (!$meeting->checkAttendeePW($password)) {
-            return new XmlResponse((object) [], 'FAILED', 503);
         }
 
         $meeting->addAttendee($attendee);
