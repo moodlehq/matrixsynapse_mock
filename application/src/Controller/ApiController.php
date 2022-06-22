@@ -153,7 +153,11 @@ class ApiController extends DataController
 
         $attendee = new Attendee();
         $attendee->setServerID($serverID);
-        $attendee->setUserId($request->query->get('userID'));
+        if ($request->query->has('guest')) {
+            $attendee->setUserID('guest');
+        } else {
+            $attendee->setUserId($request->query->get('userID'));
+        }
         $attendee->setFullName($request->query->get('fullName'));
 
         $ismoderator = false;
