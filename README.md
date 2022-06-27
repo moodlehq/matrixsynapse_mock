@@ -3,6 +3,23 @@
 This project and associated docker containers provide a mock of the main BigBlueButton server and can be used for
 testing of BigBlueButton integrations.
 
+## Quick setup using Docker
+Run the following command to get your mock server up and running:
+   ```
+   docker run -p 8001:80 moodlehq/bigbluebutton_mock
+   ```
+
+## Example usage
+### Automated tests
+You need to define `TEST_MOD_BIGBLUEBUTTONBN_MOCK_SERVER` in your config.php when running automated tests like PHPUnit and Behat. 
+Otherwise, most of the BigBlueButton tests will be marked skipped.
+
+For example, add the following to your config.php after the `$CFG->wwwroot` line:
+   ```
+   define('TEST_MOD_BIGBLUEBUTTONBN_MOCK_SERVER', "http://localhost:8001/hash" . sha1($CFG->wwwroot));
+   ```
+
+## More information
 All endpoints must be prefixed with a serverID to allow for parallel runs, for example:
 
 ```
@@ -26,7 +43,7 @@ And the following endpoints exist to view the current meetings and recordings:
 /backoffice/recordings
 ```
 
-# Local development
+## Local development
 
 * Symphony : `wget https://get.symfony.com/cli/installer -O - | bash`
 * PHP SQLLite3 : example `sudo apt install php7.4-sqlite3`
@@ -37,7 +54,7 @@ Check requirements:
     cd application
     symfony check:requirements
 
-Setup the db:
+Set up the db:
 
     php bin/console doctrine:database:drop --force
     php bin/console doctrine:schema:create
