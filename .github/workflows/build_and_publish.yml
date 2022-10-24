@@ -15,7 +15,8 @@ jobs:
           GH_OWNER: ${{ secrets.GH_OWNER }}
           DOCKERHUB_OWNER: ${{ secrets.DOCKERHUB_OWNER }}
         if: env.GH_OWNER != '' || env.DOCKERHUB_OWNER != ''
-        run: echo '::set-output name=defined::true'
+        run: echo "defined=true" >> $GITHUB_OUTPUT
+
   build-docker:
     needs: [check-env]
     # Completely avoid forks to try this workflow.
