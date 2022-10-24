@@ -9,15 +9,15 @@ RUN echo "Building for ${TARGETPLATFORM}"
 
 EXPOSE 80
 
+RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash
+
 RUN apt update \
-    && apt install -y zlib1g-dev g++ git libicu-dev zip libzip-dev \
+    && apt install -y zlib1g-dev g++ git libicu-dev zip libzip-dev symfony-cli \
     && apt-get purge -y --auto-remove -o APT:::AutoRemove::RecommendsImportant=false
 
 WORKDIR /var/www
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN curl -sS https://get.symfony.com/cli/installer | bash && \
-    mv /root/.symfony/bin/symfony /usr/local/bin/symfony
 RUN symfony check:requirements
 
 COPY docker/entrypoint.sh /entrypoint.sh
