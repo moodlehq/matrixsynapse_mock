@@ -96,11 +96,6 @@ jobs:
           push: true
           tags: ${{ steps.calculatetagsgcr.outputs.tags }}
 
-      # https://github.com/peter-evans/dockerhub-description
-      # It's horrible that we need to use password here instead of PAT, because
-      # that's only available via CLI what defeats 2FA. Anyway, we need to
-      # auto-update the description, so using it (till available via PAT).
-      # Link: https://github.com/peter-evans/dockerhub-description/issues/10
       # Note that we only update the description with the main branch version.
       - name: Set Docker Hub description from README.md
         if: github.ref == 'refs/heads/main' && env.DOCKERHUB_OWNER != ''
