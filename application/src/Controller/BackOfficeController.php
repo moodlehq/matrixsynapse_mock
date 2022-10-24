@@ -25,7 +25,7 @@ class BackOfficeController extends DataController
      *
      * @var string
      */
-    const DEFAULT_SHARED_SECRET = '8cd8ef52e8e101574e400365b55e11a6';
+    const DEFAULT_SHARED_SECRET = '0b21fcaf34673a8c3ec8ed877d76ae34';
 
     /**
      * @Route("/createMeeting", name="backOfficeMeetingCreate")
@@ -147,7 +147,7 @@ class BackOfficeController extends DataController
             $parentMeetingID = $request->query->get('parentMeetingID');
 
             $parentMeeting = $this->findRoomConfiguration($serverID, $parentMeetingID);
-            foreach($parentMeeting->getChildMeetings() as $childMeeting) {
+            foreach ($parentMeeting->getChildMeetings() as $childMeeting) {
                 if (!(--$sequence)) {
                     $meeting = $childMeeting;
                     break;
@@ -260,7 +260,7 @@ class BackOfficeController extends DataController
             $response = $client->request('GET', $url, [
                 'query' => [
                     'signed_parameters' => $jwtparams,
-                ]
+                ],
             ]);
 
             $statusCode = $response->getStatusCode();
