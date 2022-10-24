@@ -9,10 +9,11 @@ RUN echo "Building for ${TARGETPLATFORM}"
 
 EXPOSE 80
 
-RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash
-
-RUN apt update \
-    && apt install -y zlib1g-dev g++ git libicu-dev zip libzip-dev symfony-cli \
+RUN apt-get update \
+    && apt-get install -y zlib1g-dev g++ git libicu-dev zip libzip-dev gnupg apt-transport-https \
+    && curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash \
+    && apt-get update \
+    && apt-get install -y symfony-cli \
     && apt-get purge -y --auto-remove -o APT:::AutoRemove::RecommendsImportant=false
 
 WORKDIR /var/www
