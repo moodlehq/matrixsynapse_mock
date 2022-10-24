@@ -151,14 +151,9 @@ class Meeting
     private $running = false;
 
     /**
-     * @ORM\OneToMany(targetEntity=Attendee::class, mappedBy="meeting", orphanRemoval=true, fetch="EAGER")
+     * @ORM\OneToMany(targetEntity=Attendee::class, mappedBy="meetingID", orphanRemoval=true, fetch="EAGER")
      */
     private $attendees;
-
-    /**
-     * @ORM\OneToMany(targetEntity=Event::class, mappedBy="meeting", orphanRemoval=true, fetch="EAGER")
-     */
-    private $events;
 
     /**
      * @ORM\OneToMany(targetEntity=Recording::class, mappedBy="meeting", orphanRemoval=true)
@@ -212,10 +207,6 @@ class Meeting
      */
     private $childMeetings;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
-    private $analyticsCallbackURL = null;
 
     public function __construct()
     {
@@ -505,30 +496,11 @@ class Meeting
         return $this->attendees;
     }
 
-
-    /**
-     * @return Collection|Event[]
-     */
-    public function getEvents(): Collection
-    {
-        return $this->events;
-    }
-
     public function addAttendee(Attendee $attendee): self
     {
         if (!$this->attendees->contains($attendee)) {
             $this->attendees[] = $attendee;
-            $attendee->setMeeting($this);
-        }
-
-        return $this;
-    }
-
-    public function addEvent(Event $event): self
-    {
-        if (!$this->events->contains($event)) {
-            $this->events[] = $event;
-            $event->setMeeting($this);
+            $attendee->setMeetingID($this);
         }
 
         return $this;
@@ -538,8 +510,8 @@ class Meeting
     {
         if ($this->attendees->removeElement($attendee)) {
             // set the owning side to null (unless already changed)
-            if ($attendee->getMeeting() === $this) {
-                $attendee->setMeeting(null);
+            if ($attendee->getMeetingID() === $this) {
+                $attendee->setMeetingID(null);
             }
         }
 
@@ -740,12 +712,5 @@ class Meeting
         return !empty($this->childMeetings);
     }
 
-    public function setAnalyticsCallbackURL(?string $url) {
-        $this->analyticsCallbackURL = $url;
-    }
-
-    public function getAnalyticsCallbackURL(): string {
-        return $this->analyticsCallbackURL;
-    }
 
 }

@@ -9,17 +9,6 @@ use Symfony\Component\HttpFoundation\Request;
 
 abstract class DataController extends AbstractController
 {
-
-    protected function handleAttendeeNotFound(?string $attendeeId): ErrorResponse
-    {
-        return new ErrorResponse(
-            'notFound',
-            'We could not find an attendee with this attendee Id',
-            'FAILED',
-            404
-        );
-    }
-
     protected function handleRoomNotFound(?string $meetingID): ErrorResponse
     {
         return new ErrorResponse(
