@@ -98,8 +98,8 @@ class BackOfficeController extends DataController
         }
 
         if ($request->query->has('isBreakout') && ((int)$request->query->get('isBreakout'))) {
-           $meeting->setIsBreakout(true);
-           if ($request->query->has('parentMeetingID')) {
+            $meeting->setIsBreakout(true);
+            if ($request->query->has('parentMeetingID')) {
                 $parentMeeting = $this->getDoctrine()
                     ->getRepository(Meeting::class)
                     ->findOneBy(['meetingID' => $request->query->get('parentMeetingID')]);
@@ -177,7 +177,7 @@ class BackOfficeController extends DataController
             $recording->setProtected(!empty($request->query->get('protect')));
         }
 
-       if ($request->query->has('startTime')) {
+        if ($request->query->has('startTime')) {
             $recording->setStartTime(new \DateTime("@" . $request->query->get('startTime')));
         }
         if ($request->query->has('endTime')) {
