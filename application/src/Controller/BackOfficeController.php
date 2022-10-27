@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Component\HttpFoundation\MeetingSummaryResponse;
 use App\Component\HttpFoundation\XmlResponse;
 use App\Entity\Attendee;
+use App\Entity\Event;
 use App\Entity\Meeting;
 use App\Entity\Recording;
 use Firebase\JWT\JWT;
@@ -71,29 +72,49 @@ class BackOfficeController extends DataController
         $entityManager = $this->getDoctrine()->getManager();
 
         if ($request->query->has('moderators')) {
-            $moderatorCount = $request->query->get('moderators');
-            for ($i = 1; $i <= $moderatorCount; $i++) {
-                $attendee = new Attendee();
-                $attendee->setUserId("Moderator {$i}");
-                $attendee->setFullName("Moderator {$i}");
-                $attendee->setRole(Attendee::ROLE_MODERATOR);
-                $attendee->setIsPresenter(true);
+            $moderators = $request->query->get('moderators');
+            if ($moderators) {
+                $moderatorsList = explode(',', $moderators);
+                foreach ($moderatorsList as $i => $moderatorID) {
+                    $attendee = new Attendee();
+                    $attendee->setUserId(trim($moderatorID));
+                    $attendee->setFullName("Moderator {$i}");
+                    $attendee->setRole(Attendee::ROLE_MODERATOR);
+                    $attendee->setIsPresenter(true);
 
-                $entityManager->persist($attendee);
-                $meeting->addAttendee($attendee);
+                    $entityManager->persist($attendee);
+                    $meeting->addAttendee($attendee);
+                }
             }
         }
 
         if ($request->query->has('participants')) {
-            $participantCount = $request->query->get('participants');
-            for ($i = 1; $i <= $participantCount; $i++) {
-                $attendee = new Attendee();
-                $attendee->setUserId("Moderator {$i}");
-                $attendee->setFullName("Moderator {$i}");
-                $attendee->setServerID($serverID);
+            $participants = $request->query->get('participants');
+            if ($participants) {
+                if (is_numeric($participants)) {
+                    // Create X random participants.
+                    $participantCount = intval($participants);
+                    $maxuserid = $participantCount * 1000;
+                    for($i = 0; $i < $participantCount; $i++) {
+                        $attendee = new Attendee();
+                        $attendee->setUserId(rand(1, $maxuserid));
+                        $attendee->setFullName("Participant {$i}");
+                        $attendee->setServerID($serverID);
+                        $entityManager->persist($attendee);
+                        $meeting->addAttendee($attendee);
+                    }
+                } else {
+                    $participantsList = json_decode($participants);
+                    foreach ($participantsList as $i => $participantID) {
+                        $attendee = new Attendee();
+                        $attendee->setUserId(trim($participantID));
+                        $attendee->setFullName("Participant {$i}");
+                        $attendee->setServerID($serverID);
 
-                $entityManager->persist($attendee);
-                $meeting->addAttendee($attendee);
+                        $entityManager->persist($attendee);
+                        $meeting->addAttendee($attendee);
+                    }
+                }
             }
         }
 
@@ -120,6 +141,9 @@ class BackOfficeController extends DataController
             if ($request->query->has('sequence')) {
                 $meeting->setBreakoutSequence($request->query->get('sequence'));
             }
+        }
+        if ($request->query->has('meta_analytics-callback-url')) {
+            $meeting->setAnalyticsCallbackURL($request->query->get('meta_analytics-callback-url'));
         }
         $entityManager->persist($meeting);
         $entityManager->flush();
@@ -233,9 +257,14 @@ class BackOfficeController extends DataController
     }
 
     /**
+     * The sendRecordingReadyNotification callback. The old route (sendNotifications) is still
+     * maintained but will be deprecated.
+     *
+     * @Route("/sendRecordingReadyNotifications")
      * @Route("/sendNotifications")
+     * @deprecated
      */
-    public function sendNotifications(Request $request, string $serverID): XmlResponse
+    public function sendRecordingReadyNotifications(Request $request, string $serverID): XmlResponse
     {
         $entities = $this->getDoctrine()
             ->getRepository(Recording::class)
@@ -279,6 +308,124 @@ class BackOfficeController extends DataController
                 'array' => $notified,
             ],
         ]);
+    }
+
+    /**
+     * @Route("/addMeetingEvent")
+     */
+    public function addMeetingEvent(Request $request, string $serverID): XmlResponse
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $meetingID = $request->query->get('meetingID');
+        $meeting = $this->findRoomConfiguration($serverID, $meetingID);
+        if (empty($meeting)) {
+            return $this->handleRoomNotFound($meetingID);
+        }
+        $attendeeID = $request->query->get('attendeeID');
+
+        $attendee = $this->getDoctrine()
+            ->getRepository(Attendee::class)
+            ->findOneBy([
+                'userID' => $attendeeID,
+            ]);
+        if (empty($attendee)) {
+            return $this->handleAttendeeNotFound($attendeeID);
+        }
+        $eventData = $request->get('eventData', null);
+        $eventType = $request->get('eventType', Event::TYPE_JOIN);
+        $event = new Event($attendee, $eventType, $eventData);
+        $meeting->addEvent($event);
+        $entityManager->persist($event);
+        $entityManager->persist($meeting);
+        $entityManager->flush();
+
+        return new XmlResponse((object) ['error' => false]);
+    }
+
+    /**
+     * @Route("/sendAllEvents")
+     */
+    public function sendAllEvents(Request $request, string $serverID): XmlResponse
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $meetingID = $request->query->get('meetingID');
+        $meeting = $this->findRoomConfiguration($serverID, $meetingID);
+        if (empty($meeting)) {
+            return $this->handleRoomNotFound($meetingID);
+        }
+        $events = $meeting->getEvents();
+        $attendees = [];
+        foreach ($events as $event) {
+            $attendeeId = $event->getAttendee()->getUserID();
+            if (empty($attendees[$attendeeId])) {
+                $attendees[$attendeeId] = (object) [
+                    'ext_user_id' => $attendeeId,
+                    'engagement' => (object) [
+                        'chats' => 0,
+                        "talks" => 0,
+                        "raisehand" => 0,
+                        "emojis" => 0,
+                        "poll_votes" => 0,
+                        "talk_time" => 0,
+                    ],
+                    'duration' => 0
+                ];
+            }
+
+            if ($event->getType() === Event::TYPE_ATTENDANCE) {
+                $data = $event->getData();
+                if (!empty($data)) {
+                    $attendees[$attendeeId]->duration += intval($data); // In seconds.
+                }
+            } else {
+                $engagement = $attendees[$attendeeId]->engagement;
+                $engagement->{$event->getType()} += 1;
+                $attendees[$attendeeId]->engagement = $engagement;
+            }
+        }
+        $eventsdata = (object) [
+            'meeting_id' => $meeting->getMeetingID(),
+            'internal_meeting_id' => $meeting->getId(),
+            'data' => (object) [
+                'metadata' => (object) [
+                    'is_breakout' => $meeting->isBreakout(),
+                    'analytics_callback_url' => '',
+                ], // There is more here but we just output the necessary info.
+                'duration' => $meeting->getEndTime() ?
+                    $meeting->getEndTime()->getTimestamp() - $meeting->getStartTime()->getTimestamp()
+                    : time() - $meeting->getStartTime()->getTimestamp(),
+                'start' => $meeting->getStartTime(),
+                'finish' => $meeting->getEndTime(),
+                'attendees' => array_values($attendees),
+            ],
+        ];
+        if ($request->get('sendQuery', false)) {
+            // When using PHP Unit there is no point sending the query back.
+            $secret = $request->get('secret', self::DEFAULT_SHARED_SECRET);
+            $client = HttpClient::create();
+            $url = htmlspecialchars_decode($meeting->getAnalyticsCallbackURL());
+            $token = JWT::encode(
+                ['exp' => time() + 24 * 3600],
+                $secret,
+                'HS512'
+            );
+            $response = $client->request('POST', $url, [
+                'headers' => [
+                    'Authorization' => "Bearer " . $token,
+                    'Content-Type' => 'application/json',
+                    'User-Agent' => 'BigBlueButton Analytics Callback'
+                ],
+                'body' => json_encode($eventsdata)
+            ]);
+            $statusCode = $response->getStatusCode();
+            if ($statusCode === 200 || $statusCode === 202) {
+                return new XmlResponse((object) ['error' => false]);
+            }
+
+            return new XmlResponse((object) ['error' => true]);
+        }
+
+        return new XmlResponse((object) ['error' => false, 'data' => $eventsdata]);
     }
 
     /**

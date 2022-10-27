@@ -171,7 +171,13 @@ class ApiController extends DataController
             $attendee->setRole(Attendee::ROLE_MODERATOR);
             $attendee->setIsPresenter(true);
         }
-
+        if (!$attendee->isModerator() && ($maxusers = $meeting->getMaxUsers())) {
+            if ($meeting->getAttendees()->count() > $maxusers) {
+                return new MessageResponse('maxParticipantsReached',
+                    'The number of participants allowed for this meeting has been reached',
+                    'FAILED');
+            }
+        }
         $meeting->addAttendee($attendee);
 
         $entityManager = $this->getDoctrine()->getManager();
