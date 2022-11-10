@@ -153,7 +153,7 @@ class ApiController extends DataController
 
         $attendee = new Attendee();
         $attendee->setServerID($serverID);
-        if ($request->query->has('guest')) {
+        if ($request->query->has('guest') && $request->query->get('guest') == 'true') {
             $attendee->setUserID('guest');
         } else {
             $attendee->setUserId($request->query->get('userID'));
