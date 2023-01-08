@@ -1,22 +1,22 @@
-# BigBlueButton Mock API Server
+# Matrix Synapse Mock API Server
 
-This project and associated docker containers provide a mock of the main BigBlueButton server and can be used for
-testing of BigBlueButton integrations.
+This project and associated docker containers provide a partial mock of the main Matrix Synapse server and can be used for
+testing of Synapse integrations.
 
 ## Quick setup using Docker
 Run the following command to get your mock server up and running:
    ```
-   docker run -p 8001:80 moodlehq/bigbluebutton_mock
+   docker run -p 8001:80 moodlehq/matrixsynapse_mock
    ```
 
 ## Example usage
 ### Automated tests
-You need to define `TEST_MOD_BIGBLUEBUTTONBN_MOCK_SERVER` in your config.php when running automated tests like PHPUnit and Behat. 
+You need to define `TEST_MOD_SYNAPSE_MOCK_SERVER` in your config.php when running automated tests like PHPUnit and Behat. 
 Otherwise, most of the BigBlueButton tests will be marked skipped.
 
 For example, add the following to your config.php after the `$CFG->wwwroot` line:
    ```
-   define('TEST_MOD_BIGBLUEBUTTONBN_MOCK_SERVER', "http://localhost:8001/hash" . sha1($CFG->wwwroot));
+   define('TEST_MOD_SYNAPSE_MOCK_SERVER', "http://localhost:8001/hash" . sha1($CFG->wwwroot));
    ```
 
 ## More information
@@ -82,4 +82,4 @@ following secrets [following secrets ](https://docs.github.com/en/actions/securi
 * DOCKERHUB_USERNAME
 * GH_OWNER
 
-[![Docker multiarch publish](https://github.com/moodlehq/bigbluebutton_mock/actions/workflows/build_and_publish.yml/badge.svg)](https://github.com/moodlehq/bigbluebutton_mock/actions/workflows/build_and_publish.yml)
+[![Docker multiarch publish](https://github.com/moodlehq/matrixsynapse_mock/actions/workflows/build_and_publish.yml/badge.svg)](https://github.com/moodlehq/matrixsynapse_mock/actions/workflows/build_and_publish.yml)

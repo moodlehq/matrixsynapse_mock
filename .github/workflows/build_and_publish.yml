@@ -2,7 +2,7 @@ name: Docker multiarch publish
 
 on: [push, workflow_dispatch]
 env:
-  REPOSITORY: bigbluebutton_mock
+  REPOSITORY: matrixsynsapse_mock
 jobs:
   check-env:
     # We need to check if at least one of the repository is defined
