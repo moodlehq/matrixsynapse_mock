@@ -6,6 +6,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Users;
+use App\Entity\Threepids;
 
 /**
  * API Controller to serve a mock of the Synapse API.
@@ -48,10 +49,9 @@ class SynapseController extends DataController {
             return $methodCheck['message'];
         }
 
-        $payload = json_decode($request->getContent());
-
         if ($method == 'PUT') {
             // Create user.
+            $this->createUser($serverID, $userID, $request);
         } elseif ($method == 'GET') {
             // Get user.
         }
@@ -61,8 +61,7 @@ class SynapseController extends DataController {
                 'severID' => $serverID,
                 'userID' => $userID,
                 'method' => $request->getMethod(),
-                'authHeader' => $request->headers->get('authorization'),
-                'payload' => $payload
+                'authHeader' => $request->headers->get('authorization')
         ]);
     }
 
@@ -144,8 +143,39 @@ class SynapseController extends DataController {
      * @param Request $request
      * @return \stdClass
      */
-    private function createUser(string $serverID, string $userID, Request $request): \stdClass
+    private function createUser(string $serverID, string $userID, Request $request): JsonResponse
     {
+        $payload = json_decode($request->getContent());
+        $entityManager = $this->getDoctrine()->getManager();
+
+        $user = new Users();
+        $user->setServerid($serverID);
+        $user->setUserid($userID);
+        $user->setDisplayname($payload->displayname);
+
+        // Process threepids.
+        if (!empty($payload->threepids)){
+            foreach ($payload->threepids as $pid) {
+                $threepid = new Threepids();
+                $threepid->setMedium($pid->medium);
+                $threepid->setAddress($pid->address);
+
+                $user->addThreepid($threepid);
+            }
+        }
+
+        // Process external ids.
+        //TODO: add support for external ids.
+
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        //{"name":"@barruser:synapse","is_guest":0,"admin":false,"consent_version":null,"consent_ts":null,"consent_server_notice_sent":null,"appservice_id":null,"creation_ts":1673592567,"user_type":null,"deactivated":false,"shadow_banned":false,"displayname":"Barabius Darabius...","avatar_url":null,"threepids":[{"medium":"email","address":"bar@bar.com","validated_at":1673592567128,"added_at":1673592567128}],"external_ids":[],"erased":false}
+        return new JsonResponse((object) [
+                'errcode' => 'M_UNKNOWN_TOKEN',
+                'error' => 'Invalid access token passed.'
+        ],
+                401);
 
     }
 
