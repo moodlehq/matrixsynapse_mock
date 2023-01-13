@@ -2,7 +2,7 @@
 
 namespace App\Entity;
 
-use App\Repository\UserRepository;
+use App\Repository\ThreepidsRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -18,13 +18,6 @@ class Threepids
     private $id;
 
     /**
-     * @ORM\Column(type="integer")
-     * @ORM\ManyToOne(targetEntity=user::class, inversedBy="threepids")
-     * @ORM\JoinColumn(nullable=false)
-     */
-    private $user;
-
-    /**
      * @ORM\Column(type="string", length=255)
      */
     private $medium;
@@ -34,12 +27,16 @@ class Threepids
      */
     private $address;
 
-
     /**
-     * @ORM\ManyToOne(targetEntity=Meeting::class, inversedBy="attendees")
+     * @ORM\ManyToOne(targetEntity=Users::class, inversedBy="threepids")
      * @ORM\JoinColumn(nullable=false)
      */
-    //private $meeting;
+    private $userid;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
 
     public function getMedium(): ?string
     {
@@ -58,11 +55,22 @@ class Threepids
         return $this->address;
     }
 
-    public function setAddresse(string $address): self
+    public function setAddress(string $address): self
     {
         $this->address = $address;
 
         return $this;
     }
 
+    public function getUserid(): ?Users
+    {
+        return $this->userid;
+    }
+
+    public function setUserid(?Users $userid): self
+    {
+        $this->userid = $userid;
+
+        return $this;
+    }
 }

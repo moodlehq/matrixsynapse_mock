@@ -2,32 +2,32 @@
 
 namespace App\Repository;
 
-use App\Entity\Threepids;
+use App\Entity\Users;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Threepids>
+ * @extends ServiceEntityRepository<Users>
  *
- * @method Threepids|null find($id, $lockMode = null, $lockVersion = null)
- * @method Threepids|null findOneBy(array $criteria, array $orderBy = null)
- * @method Threepids[]    findAll()
- * @method Threepids[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Users|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Users|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Users[]    findAll()
+ * @method Users[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ThreepidsRepository extends ServiceEntityRepository
+class UsersRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Threepids::class);
+        parent::__construct($registry, Users::class);
     }
 
     /**
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function add(Threepids $entity, bool $flush = true): void
+    public function add(Users $entity, bool $flush = true): void
     {
         $this->_em->persist($entity);
         if ($flush) {
@@ -39,7 +39,7 @@ class ThreepidsRepository extends ServiceEntityRepository
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function remove(Threepids $entity, bool $flush = true): void
+    public function remove(Users $entity, bool $flush = true): void
     {
         $this->_em->remove($entity);
         if ($flush) {
@@ -48,15 +48,15 @@ class ThreepidsRepository extends ServiceEntityRepository
     }
 
     // /**
-    //  * @return Threepids[] Returns an array of Threepids objects
+    //  * @return Users[] Returns an array of Users objects
     //  */
     /*
     public function findByExampleField($value)
     {
-        return $this->createQueryBuilder('t')
-            ->andWhere('t.exampleField = :val')
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.exampleField = :val')
             ->setParameter('val', $value)
-            ->orderBy('t.id', 'ASC')
+            ->orderBy('u.id', 'ASC')
             ->setMaxResults(10)
             ->getQuery()
             ->getResult()
@@ -65,10 +65,10 @@ class ThreepidsRepository extends ServiceEntityRepository
     */
 
     /*
-    public function findOneBySomeField($value): ?Threepids
+    public function findOneBySomeField($value): ?Users
     {
-        return $this->createQueryBuilder('t')
-            ->andWhere('t.exampleField = :val')
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.exampleField = :val')
             ->setParameter('val', $value)
             ->getQuery()
             ->getOneOrNullResult()

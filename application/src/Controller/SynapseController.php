@@ -5,6 +5,7 @@ namespace App\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
+use App\Entity\Users;
 
 /**
  * API Controller to serve a mock of the Synapse API.
@@ -47,6 +48,7 @@ class SynapseController extends DataController {
             return $methodCheck['message'];
         }
 
+        $payload = json_decode($request->getContent());
 
         if ($method == 'PUT') {
             // Create user.
@@ -54,11 +56,13 @@ class SynapseController extends DataController {
             // Get user.
         }
 
+
         return new JsonResponse((object) [
                 'severID' => $serverID,
                 'userID' => $userID,
                 'method' => $request->getMethod(),
-                'authHeader' => $request->headers->get('authorization')
+                'authHeader' => $request->headers->get('authorization'),
+                'payload' => $payload
         ]);
     }
 
@@ -132,6 +136,17 @@ class SynapseController extends DataController {
         }
 
         return $response;
+    }
+
+    /**
+     * @param string $serverID
+     * @param string $userID
+     * @param Request $request
+     * @return \stdClass
+     */
+    private function createUser(string $serverID, string $userID, Request $request): \stdClass
+    {
+
     }
 
 }
