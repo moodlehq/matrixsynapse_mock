@@ -49,20 +49,46 @@ class SynapseController extends DataController {
             return $methodCheck['message'];
         }
 
-        if ($method == 'PUT') {
+        // Add, update of get user info.
+        $entityManager = $this->getDoctrine()->getManager();
+        $user = $entityManager->getRepository(Users::class)->findOneBy(['userid' => $userID, 'serverid' => $serverID]);
+
+        if ($method == 'PUT' && !$user) {
             // Create user.
-            $this->createUser($serverID, $userID, $request);
-        } elseif ($method == 'GET') {
-            // Get user.
+            return $this->createUser($serverID, $userID, $request);
+        } elseif ($method == 'PUT' && $user) {
+            // Update user.
+            return $this->updateUser($serverID, $userID, $request, $user);
+        } elseif ($method == 'GET' && !$user) {
+            // Get but no user.
+            return new JsonResponse((object) [
+                    'errcode' => 'M_NOT_FOUND',
+                    'error' => 'User not found'
+            ],
+                    404);
         }
 
-
+        // Finally return user info.
+        $payload = json_decode($request->getContent());
         return new JsonResponse((object) [
-                'severID' => $serverID,
-                'userID' => $userID,
-                'method' => $request->getMethod(),
-                'authHeader' => $request->headers->get('authorization')
-        ]);
+                'name' => $userID,
+                'is_guest' => 0,
+                'admin' => false,
+                'consent_version' => null,
+                'consent_ts' => null,
+                'consent_server_notice_sent' => null,
+                'appservice_id' => null,
+                'creation_ts' => time(),
+                'user_type' => null,
+                'deactivated' => false,
+                'shadow_banned' => false,
+                'displayname' => $payload->displayname,
+                'avatar_url' => null,
+                'threepids '=> [$payload->threepids],
+                'external_ids' => [],
+                'erased' => false
+        ],
+                200);
     }
 
     /**
@@ -138,17 +164,47 @@ class SynapseController extends DataController {
     }
 
     /**
+     * Create a new user in the DB.
+     *
      * @param string $serverID
      * @param string $userID
      * @param Request $request
-     * @return \stdClass
+     * @return JsonResponse
      */
     private function createUser(string $serverID, string $userID, Request $request): JsonResponse
+    {
+        $user = new Users();
+        return $this->upsertUser($serverID, $userID, $request, $user);
+
+    }
+
+    /**
+     * Update a new user in the DB.
+     *
+     * @param string $serverID
+     * @param string $userID
+     * @param Request $request
+     * @return JsonResponse
+     */
+    private function updateUser(string $serverID, string $userID, Request $request, Users $user): JsonResponse
+    {
+        return $this->upsertUser($serverID, $userID, $request, $user, 200);
+    }
+
+    /**
+     * Create or update a new user in the DB.
+     * This upsert function does most of the processing.
+     *
+     * @param string $serverID
+     * @param string $userID
+     * @param Request $request
+     * @return JsonResponse
+     */
+    private function upsertUser(string $serverID, string $userID, Request $request, Users $user, int $status = 201): JsonResponse
     {
         $payload = json_decode($request->getContent());
         $entityManager = $this->getDoctrine()->getManager();
 
-        $user = new Users();
         $user->setServerid($serverID);
         $user->setUserid($userID);
         $user->setDisplayname($payload->displayname);
@@ -156,11 +212,21 @@ class SynapseController extends DataController {
         // Process threepids.
         if (!empty($payload->threepids)){
             foreach ($payload->threepids as $pid) {
-                $threepid = new Threepids();
-                $threepid->setMedium($pid->medium);
-                $threepid->setAddress($pid->address);
+                // TODO: add server id to threepids.
+                $threepid = $entityManager->getRepository(Threepids::class)->findOneBy(['userid' => $user->getId(), 'medium' => $pid->medium]);
+                if (!$threepid) {
+                    // New user, or existing user without any associated Threepids.
+                    $threepid = new Threepids();
+                    $threepid->setMedium($pid->medium);
+                    $threepid->setAddress($pid->address);
 
-                $user->addThreepid($threepid);
+                    $user->addThreepid($threepid);
+                    $threepid->setUserid($user);
+                } else {
+                    // Updating existing.
+                    $threepid->setAddress($pid->address);
+                }
+                $entityManager->persist($threepid);
             }
         }
 
@@ -170,13 +236,27 @@ class SynapseController extends DataController {
         $entityManager->persist($user);
         $entityManager->flush();
 
-        //{"name":"@barruser:synapse","is_guest":0,"admin":false,"consent_version":null,"consent_ts":null,"consent_server_notice_sent":null,"appservice_id":null,"creation_ts":1673592567,"user_type":null,"deactivated":false,"shadow_banned":false,"displayname":"Barabius Darabius...","avatar_url":null,"threepids":[{"medium":"email","address":"bar@bar.com","validated_at":1673592567128,"added_at":1673592567128}],"external_ids":[],"erased":false}
+        $payload->threepids['validated_at'] = time();
+        $payload->threepids['added_at'] = time();
+
         return new JsonResponse((object) [
-                'errcode' => 'M_UNKNOWN_TOKEN',
-                'error' => 'Invalid access token passed.'
+                'name' => $userID,
+                'is_guest' => 0,
+                'admin' => false,
+                'consent_version' => null,
+                'consent_ts' => null,
+                'consent_server_notice_sent' => null,
+                'appservice_id' => null,
+                'creation_ts' => time(),
+                'user_type' => null,
+                'deactivated' => false,
+                'shadow_banned' => false,
+                'displayname' => $payload->displayname,
+                'avatar_url' => null,
+                'threepids '=> [$payload->threepids],
+                'external_ids' => [],
+                'erased' => false
         ],
-                401);
-
+                $status);
     }
-
 }
