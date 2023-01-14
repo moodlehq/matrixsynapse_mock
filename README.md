@@ -9,22 +9,41 @@ Run the following command to get your mock server up and running:
    docker run -p 8001:80 moodlehq/matrixsynapse_mock
    ```
 
-## Example usage
-### Automated tests
-You need to define `TEST_MOD_SYNAPSE_MOCK_SERVER` in your config.php when running automated tests like PHPUnit and Behat. 
-Otherwise, most of the BigBlueButton tests will be marked skipped.
+## API information
+All endpoints must be prefixed with a `serverID` to allow for parallel runs, for example if your Synapse server endpoint is:
 
-For example, add the following to your config.php after the `$CFG->wwwroot` line:
-   ```
-   define('TEST_MOD_SYNAPSE_MOCK_SERVER', "http://localhost:8001/hash" . sha1($CFG->wwwroot));
-   ```
+```
+https://synapse:8008/_synapse/admin/v2/users/@testuser:synapse
+```
+
+The Mock Api endpoint would be:
+
+```
+http://localhost:8001/someServerID/_synapse/admin/v2/users/@testuser:synapse
+```
+
+## API coverage
+The following are the currently mocked API endpoints. These should respond with the same HTTP status code, content type and response content as a real Synapse server.
+
+### Synapse
+Call API endpoint without Auth Header:<br/>
+`curl -i -X GET http://localhost:8001/someServerID/_synapse/admin/v2/users/@barzuser:synapse`
+
+Call API endpoint using wrong HTTP method:
+```
+curl -i --header "Authorization: Bearer syt_YWRtaW4_iNofAsbInAInYAFwkmdi_1oVMxI" \
+-X POST http://localhost:8001/someServerID/_synapse/admin/v2/users/@testuser:synapse`
+```
+
+Get user info. Handles existing and non-existing users:
+```
+curl -i --header "Authorization: Bearer syt_YWRtaW4_iNofAsbInAInYAFwkmdi_1oVMxI" \
+-X GET http://localhost:8001/someServerID/_synapse/admin/v2/users/@testuser:synapse
+```
+
 
 ## More information
-All endpoints must be prefixed with a serverID to allow for parallel runs, for example:
 
-```
-http://localhost:8001/someServerID/api
-```
 
 In addition to the standard endpoints, additional endpoints are provided for setting up data which a test requires or expects:
 ```
@@ -42,6 +61,16 @@ And the following endpoints exist to view the current meetings and recordings:
 /backoffice/meetings
 /backoffice/recordings
 ```
+
+## Automated tests
+You need to define `TEST_MOD_SYNAPSE_MOCK_SERVER` in your config.php when running automated tests like PHPUnit and Behat.
+Otherwise, most of the BigBlueButton tests will be marked skipped.
+
+For example, add the following to your config.php after the `$CFG->wwwroot` line:
+   ```
+   define('TEST_MOD_SYNAPSE_MOCK_SERVER', "http://localhost:8001/hash" . sha1($CFG->wwwroot));
+   ```
+
 
 ## Local development
 
