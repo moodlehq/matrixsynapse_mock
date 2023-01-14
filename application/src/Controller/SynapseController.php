@@ -212,13 +212,14 @@ class SynapseController extends DataController {
         // Process threepids.
         if (!empty($payload->threepids)){
             foreach ($payload->threepids as $pid) {
-                // TODO: add server id to threepids.
-                $threepid = $entityManager->getRepository(Threepids::class)->findOneBy(['userid' => $user->getId(), 'medium' => $pid->medium]);
+                $threepid = $entityManager->getRepository(Threepids::class)
+                        ->findOneBy(['serverid' => $serverID, 'userid' => $user->getId(), 'medium' => $pid->medium]);
                 if (!$threepid) {
                     // New user, or existing user without any associated Threepids.
                     $threepid = new Threepids();
                     $threepid->setMedium($pid->medium);
                     $threepid->setAddress($pid->address);
+                    $threepid->setServerid($serverID);
 
                     $user->addThreepid($threepid);
                     $threepid->setUserid($user);

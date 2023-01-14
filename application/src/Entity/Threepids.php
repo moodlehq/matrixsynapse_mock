@@ -33,6 +33,11 @@ class Threepids
      */
     private $userid;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $serverid;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -70,6 +75,18 @@ class Threepids
     public function setUserid(?Users $userid): self
     {
         $this->userid = $userid;
+
+        return $this;
+    }
+
+    public function getServerid(): ?string
+    {
+        return $this->serverid;
+    }
+
+    public function setServerid(string $serverid): self
+    {
+        $this->serverid = $serverid;
 
         return $this;
     }
