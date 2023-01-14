@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Externalids;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
@@ -123,7 +124,6 @@ class SynapseController extends DataController {
                         401);
             }
         }
-
         return $response;
     }
 
@@ -159,7 +159,6 @@ class SynapseController extends DataController {
             ],
                     404);
         }
-
         return $response;
     }
 
@@ -175,7 +174,6 @@ class SynapseController extends DataController {
     {
         $user = new Users();
         return $this->upsertUser($serverID, $userID, $request, $user);
-
     }
 
     /**
@@ -204,6 +202,8 @@ class SynapseController extends DataController {
     {
         $payload = json_decode($request->getContent());
         $entityManager = $this->getDoctrine()->getManager();
+        $hasThreepids = false;
+        $hasExternalids = false;
 
         $user->setServerid($serverID);
         $user->setUserid($userID);
@@ -229,18 +229,37 @@ class SynapseController extends DataController {
                 }
                 $entityManager->persist($threepid);
             }
+            $hasThreepids = true;
         }
 
         // Process external ids.
-        //TODO: add support for external ids.
+        if (!empty($payload->external_ids)){
+            foreach ($payload->external_ids as $eid) {
+                $externalid = $entityManager->getRepository(Externalids::class)
+                        ->findOneBy(['serverid' => $serverID, 'userid' => $user->getId(), 'auth_provider' => $eid->auth_provider]);
+                if (!$externalid) {
+                    // New user, or existing user without any associated Externalids.
+                    $externalid = new Externalids();
+                    $externalid->setAuthProvider($eid->auth_provider);
+                    $externalid->setExternalId($eid->external_id);
+                    $externalid->setServerid($serverID);
+
+                    $user->addExternalid($externalid);
+                    $externalid->setUserid($user);
+                } else {
+                    // Updating existing.
+                    $externalid->setAddress($eid->external_id);
+                }
+                $entityManager->persist($externalid);
+            }
+            $hasExternalids = true;
+        }
 
         $entityManager->persist($user);
         $entityManager->flush();
 
-        $payload->threepids['validated_at'] = time();
-        $payload->threepids['added_at'] = time();
-
-        return new JsonResponse((object) [
+        // Craft the response to mimic what the real server would return.
+        $responseObj = (object) [
                 'name' => $userID,
                 'is_guest' => 0,
                 'admin' => false,
@@ -254,10 +273,22 @@ class SynapseController extends DataController {
                 'shadow_banned' => false,
                 'displayname' => $payload->displayname,
                 'avatar_url' => null,
-                'threepids '=> [$payload->threepids],
                 'external_ids' => [],
                 'erased' => false
-        ],
-                $status);
+        ];
+
+        if ($hasThreepids) {
+            $payload->threepids['validated_at'] = time();
+            $payload->threepids['added_at'] = time();
+            $responseObj->threepids = [$payload->threepids];
+        }
+
+        if ($hasExternalids) {
+            $payload->external_ids['validated_at'] = time();
+            $payload->external_ids['added_at'] = time();
+            $responseObj->threepids = [$payload->external_ids];
+        }
+
+        return new JsonResponse($responseObj, $status);
     }
 }

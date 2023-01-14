@@ -2,32 +2,32 @@
 
 namespace App\Repository;
 
-use App\Entity\ExternalIds;
+use App\Entity\Externalids;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<ExternalIds>
+ * @extends ServiceEntityRepository<Externalids>
  *
- * @method ExternalIds|null find($id, $lockMode = null, $lockVersion = null)
- * @method ExternalIds|null findOneBy(array $criteria, array $orderBy = null)
- * @method ExternalIds[]    findAll()
- * @method ExternalIds[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Externalids|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Externalids|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Externalids[]    findAll()
+ * @method Externalids[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ExternalIdsRepository extends ServiceEntityRepository
+class ExternalidsRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, ExternalIds::class);
+        parent::__construct($registry, Externalids::class);
     }
 
     /**
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function add(ExternalIds $entity, bool $flush = true): void
+    public function add(Externalids $entity, bool $flush = true): void
     {
         $this->_em->persist($entity);
         if ($flush) {
@@ -39,7 +39,7 @@ class ExternalIdsRepository extends ServiceEntityRepository
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function remove(ExternalIds $entity, bool $flush = true): void
+    public function remove(Externalids $entity, bool $flush = true): void
     {
         $this->_em->remove($entity);
         if ($flush) {
@@ -48,7 +48,7 @@ class ExternalIdsRepository extends ServiceEntityRepository
     }
 
     // /**
-    //  * @return ExternalIds[] Returns an array of ExternalIds objects
+    //  * @return Externalids[] Returns an array of Externalids objects
     //  */
     /*
     public function findByExampleField($value)
@@ -65,7 +65,7 @@ class ExternalIdsRepository extends ServiceEntityRepository
     */
 
     /*
-    public function findOneBySomeField($value): ?ExternalIds
+    public function findOneBySomeField($value): ?Externalids
     {
         return $this->createQueryBuilder('e')
             ->andWhere('e.exampleField = :val')

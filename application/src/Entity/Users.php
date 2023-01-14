@@ -39,9 +39,15 @@ class Users
      */
     private $serverid;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Externalids::class, mappedBy="userid")
+     */
+    private $externalids;
+
     public function __construct()
     {
         $this->threepids = new ArrayCollection();
+        $this->externalids = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -111,6 +117,36 @@ class Users
     public function setServerid(string $serverid): self
     {
         $this->serverid = $serverid;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Externalids>
+     */
+    public function getExternalids(): Collection
+    {
+        return $this->externalids;
+    }
+
+    public function addExternalid(Externalids $externalid): self
+    {
+        if (!$this->externalids->contains($externalid)) {
+            $this->externalids[] = $externalid;
+            $externalid->setUserid($this);
+        }
+
+        return $this;
+    }
+
+    public function removeExternalid(Externalids $externalid): self
+    {
+        if ($this->externalids->removeElement($externalid)) {
+            // set the owning side to null (unless already changed)
+            if ($externalid->getUserid() === $this) {
+                $externalid->setUserid(null);
+            }
+        }
 
         return $this;
     }
