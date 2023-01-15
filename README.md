@@ -41,6 +41,21 @@ curl -i --header "Authorization: Bearer syt_YWRtaW4_iNofAsbInAInYAFwkmdi_1oVMxI"
 -X GET http://localhost:8001/someServerID/_synapse/admin/v2/users/@testuser:synapse
 ```
 
+Create and update users:
+```
+curl -i --header "Authorization: Bearer syt_YWRtaW4_iNofAsbInAInYAFwkmdi_1oVMxI" \
+-X PUT \
+-d '{"displayname":"Someone new","threepids":[{"medium":"email","address":"newuser@bar.com"}]}' \
+http://localhost:8001/someServerID/_synapse/admin/v2/users/@anewuser:synapse
+```
+
+### Matrix
+Create a room:
+```
+curl -X POST -H 'Authorization: Bearer syt_YWRtaW4_KXUwoITuowupgGEIGNuK_4MLu3S' \
+-d '{"name":"curl room","topic":"curly topic","preset":"private_chat","visibility":"private","initial_state":[{"type":"m.room.encryption","state_key":"","content":{"algorithm":"m.megolm.v1.aes-sha2"}}]}' \
+http://localhost:8001/someServerID/_matrix/client/r0/createRoom
+```
 
 ## More information
 
