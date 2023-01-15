@@ -84,10 +84,78 @@ class MatrixController extends DataController {
      * @return JsonResponse
      */
     public function roomState(string $serverID, string $roomID, string $stateType, Request $request): JsonResponse {
+        // Check call auth.
+        $authCheck = ApiCheck::checkAuth($request);
+        if (!$authCheck['status']) {
+            // Auth check failed, return error info.
+            return $authCheck['message'];
+        }
+
+        // Check HTTP method is accepted.
+        $method = $request->getMethod();
+        $methodCheck = ApiCheck::checkMethod(['PUT'], $method);
+        if (!$methodCheck['status']) {
+            // Method check failed, return error info.
+            return $methodCheck['message'];
+        }
+
+        // Check room exists.
+        $room = $this->roomExists($roomID);
+        if (empty($room)) {
+            return new JsonResponse((object) [
+                    'errcode' => 'M_FORBIDDEN',
+                    'error' => 'Unknown room'
+            ],
+                    403);
+        }
+
+        $payload = json_decode($request->getContent());
+
+        if ($stateType == 'm.room.topic') {
+            $room->setTopic = $payload->topic;
+
+        } elseif ($stateType == 'm.room.name') {
+            // Update room name.
+            $room->setName = $payload->name;
+
+        } elseif ($stateType == 'm.room.avatar') {
+            // Update room avatar.
+            $room->setAvatar = $payload->url;
+        } else {
+            // Unknown state.
+            return new JsonResponse((object) [
+                    'errcode' => 'M_UNRECOGNIZED',
+                    'error' => 'Unrecognized request'
+            ],
+                    404);
+        }
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($room);
+        $entityManager->flush();
+
+        // Create a mock event ID. This isn't the way Synapse does it (I think), but it's a good enough approximation.
+        // This ID doesn't change if the seed data is the same.
+        $eventID = substr(hash('sha256', ($serverID . $roomID . $stateType)), 0, 44);
+
         return new JsonResponse((object) [
-                'room_id' => $roomID,
+                'event_id' => $eventID,
         ],
                 200);
+    }
+
+    /**
+     * Check if room exists.
+     *
+     * @param string $roomID
+     * @return object
+     */
+    private function roomExists(string $roomID): object
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+
+        return $entityManager->getRepository(Rooms::class)->findOneBy(['roomid' => $roomID]);
+
     }
 
 }
