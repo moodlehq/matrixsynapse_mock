@@ -71,7 +71,11 @@ class SynapseController extends DataController {
         }
 
         // Finally return user info.
-        $payload = json_decode($request->getContent());
+        $threepids = $this->getDoctrine()->getRepository(Threepids::class)
+                ->getUserThreepids($serverID, $user->getId());
+        $externalids = $this->getDoctrine()->getRepository(Externalids::class)
+                ->getUserExternalids($serverID, $user->getId());
+
         return new JsonResponse((object) [
                 'name' => $userID,
                 'is_guest' => 0,
@@ -84,10 +88,10 @@ class SynapseController extends DataController {
                 'user_type' => null,
                 'deactivated' => false,
                 'shadow_banned' => false,
-                'displayname' => $payload->displayname,
+                'displayname' => $user->getDisplayname(),
                 'avatar_url' => null,
-                'threepids '=> [$payload->threepids],
-                'external_ids' => [],
+                'threepids '=> $threepids,
+                'external_ids' => $externalids,
                 'erased' => false
         ],
                 200);
@@ -164,6 +168,7 @@ class SynapseController extends DataController {
         }
 
         // Process external ids.
+        // TODO: External IDs must be unique.
         if (!empty($payload->external_ids)){
             foreach ($payload->external_ids as $eid) {
                 $externalid = $entityManager->getRepository(Externalids::class)
@@ -179,7 +184,7 @@ class SynapseController extends DataController {
                     $externalid->setUserid($user);
                 } else {
                     // Updating existing.
-                    $externalid->setAddress($eid->external_id);
+                    $externalid->setExternalId($eid->external_id);
                 }
                 $entityManager->persist($externalid);
             }

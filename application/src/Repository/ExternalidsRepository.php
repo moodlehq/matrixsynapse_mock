@@ -47,6 +47,25 @@ class ExternalidsRepository extends ServiceEntityRepository
         }
     }
 
+    /**
+     * Get the External ids for a user.
+     *
+     * @param string $userID
+     * @param string $serverID
+     * @return float|int|mixed|string
+     */
+    public function getUserExternalids(string $serverID, string $userID)
+    {
+        return $this->createQueryBuilder('t')
+                ->andWhere('t.userid = :userid')
+                ->setParameter('userid', $userID)
+                ->andWhere('t.serverid = :serverid')
+                ->setParameter('serverid', $serverID)
+                ->select('t.auth_provider', 't.external_id')
+                ->getQuery()
+                ->getResult();
+    }
+
     // /**
     //  * @return Externalids[] Returns an array of Externalids objects
     //  */

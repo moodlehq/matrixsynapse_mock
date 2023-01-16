@@ -47,6 +47,25 @@ class ThreepidsRepository extends ServiceEntityRepository
         }
     }
 
+    /**
+     * Get the threepids for a user.
+     *
+     * @param string $userID
+     * @param string $serverID
+     * @return float|int|mixed|string
+     */
+    public function getUserThreepids(string $serverID, string $userID)
+    {
+        return $this->createQueryBuilder('t')
+                ->andWhere('t.userid = :userid')
+                ->setParameter('userid', $userID)
+                ->andWhere('t.serverid = :serverid')
+                ->setParameter('serverid', $serverID)
+                ->select('t.medium', 't.address')
+                ->getQuery()
+                ->getResult();
+    }
+
     // /**
     //  * @return Threepids[] Returns an array of Threepids objects
     //  */
