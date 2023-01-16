@@ -78,7 +78,7 @@ class MatrixController extends DataController {
     /**
      * Update various room state components.
      *
-     * @Route("/rooms/{roomID}/state/{stateType}", name="createRoom")
+     * @Route("/rooms/{roomID}/state/{stateType}", name="roomState")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
@@ -112,15 +112,15 @@ class MatrixController extends DataController {
         $payload = json_decode($request->getContent());
 
         if ($stateType == 'm.room.topic') {
-            $room->setTopic = $payload->topic;
+            $room->setTopic($payload->topic);
 
         } elseif ($stateType == 'm.room.name') {
             // Update room name.
-            $room->setName = $payload->name;
+            $room->setName($payload->name);
 
         } elseif ($stateType == 'm.room.avatar') {
             // Update room avatar.
-            $room->setAvatar = $payload->url;
+            $room->setAvatar($payload->url);
         } else {
             // Unknown state.
             return new JsonResponse((object) [
@@ -148,9 +148,9 @@ class MatrixController extends DataController {
      * Check if room exists.
      *
      * @param string $roomID
-     * @return object
+     * @return object|null
      */
-    private function roomExists(string $roomID): object
+    private function roomExists(string $roomID): ?object
     {
         $entityManager = $this->getDoctrine()->getManager();
 

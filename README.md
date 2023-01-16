@@ -57,6 +57,22 @@ curl -i -X POST -H 'Authorization: Bearer syt_YWRtaW4_KXUwoITuowupgGEIGNuK_4MLu3
 http://localhost:8001/someServerID/_matrix/client/r0/createRoom
 ```
 
+Update room topic:
+```
+curl -i -X PUT -H 'Authorization: Bearer syt_YWRtaW4_KXUwoITuowupgGEIGNuK_4MLu3S' \
+-d '{"topic":"the topic updated"}' \
+http://localhost:8001/_matrix/client/r0/rooms/!IWCtGkszxDkBUrIsGg%3Asynapse/state/m.room.topic'
+```
+
+Update room name:
+```
+curl -i -X PUT -H 'Authorization: Bearer syt_YWRtaW4_KXUwoITuowupgGEIGNuK_4MLu3S' \
+-d '{"name":"new room name"}' \
+http://localhost:8001/_matrix/client/r0/rooms/!IWCtGkszxDkBUrIsGg%3Asynapse/state/m.room.name'
+```
+
+
+
 ## More information
 
 
