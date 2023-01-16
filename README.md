@@ -71,28 +71,6 @@ curl -i -X PUT -H 'Authorization: Bearer syt_YWRtaW4_KXUwoITuowupgGEIGNuK_4MLu3S
 http://localhost:8001/_matrix/client/r0/rooms/!IWCtGkszxDkBUrIsGg%3Asynapse/state/m.room.name'
 ```
 
-
-
-## More information
-
-
-In addition to the standard endpoints, additional endpoints are provided for setting up data which a test requires or expects:
-```
-/backoffice/createMeeting
-/backoffice/createRecording
-```
-
-In addition, the following endpoint can be used to trigger a reset between tests:
-```
-/backoffice/reset
-```
-
-And the following endpoints exist to view the current meetings and recordings:
-```
-/backoffice/meetings
-/backoffice/recordings
-```
-
 ## Automated tests
 You need to define `TEST_MOD_SYNAPSE_MOCK_SERVER` in your config.php when running automated tests like PHPUnit and Behat.
 Otherwise, most of the BigBlueButton tests will be marked skipped.
@@ -101,7 +79,6 @@ For example, add the following to your config.php after the `$CFG->wwwroot` line
    ```
    define('TEST_MOD_SYNAPSE_MOCK_SERVER', "http://localhost:8001/hash" . sha1($CFG->wwwroot));
    ```
-
 
 ## Local development
 

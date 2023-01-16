@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Entity\Externalids;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -15,7 +16,7 @@ use App\Service\ApiCheck;
  *
  * @Route("/{serverID}/_synapse/admin/v2")
  */
-class SynapseController extends DataController {
+class SynapseController extends AbstractController {
 
     /**
      * @Route("", name="endpoint")

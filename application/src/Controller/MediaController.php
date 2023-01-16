@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,7 +14,7 @@ use App\Service\ApiCheck;
  *
  * @Route("/{serverID}/_matrix/media/r0")
  */
-class MediaController extends DataController {
+class MediaController extends AbstractController {
 
     /**
      * @Route("", name="endpoint")
