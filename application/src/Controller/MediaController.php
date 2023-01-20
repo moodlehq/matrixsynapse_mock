@@ -22,10 +22,9 @@ class MediaController extends AbstractController {
     public function endpoint(): JsonResponse
     {
         return new JsonResponse((object) [
-                'errcode' => 'M_UNRECOGNIZED',
-                'error' => 'Unrecognized request'
-        ],
-        404);
+            'errcode' => 'M_UNRECOGNIZED',
+            'error' => 'Unrecognized request'
+        ], 404);
     }
 
     /**
@@ -60,8 +59,7 @@ class MediaController extends AbstractController {
         $contentURI = 'mxc://' . $host . '/' . substr(hash('sha256', ($serverID . $filename . $host)), 0, 24);
 
         return new JsonResponse((object) [
-                'content_uri' => $contentURI,
-        ],
-                200);
+            'content_uri' => $contentURI,
+        ], 200);
     }
 }

@@ -23,20 +23,18 @@ class ApiCheck {
             // No valid auth header found.
             $response['status'] = false;
             $response['message'] = new JsonResponse((object) [
-                    'errcode' => 'M_MISSING_TOKEN',
-                    'error' => 'Missing access token'
-            ],
-                    401);
+                'errcode' => 'M_MISSING_TOKEN',
+                'error' => 'Missing access token'
+            ], 401);
         } else {
             $authToken = substr($authHeader, 7);
             if (!self::isValidAuthToken($authToken)){
                 // Auth token is not valid.
                 $response['status'] = false;
                 $response['message'] = new JsonResponse((object) [
-                        'errcode' => 'M_UNKNOWN_TOKEN',
-                        'error' => 'Invalid access token passed.'
-                ],
-                        401);
+                    'errcode' => 'M_UNKNOWN_TOKEN',
+                    'error' => 'Invalid access token passed.'
+                ], 401);
             }
         }
         return $response;
@@ -69,13 +67,10 @@ class ApiCheck {
             // Used method is not allowed for this call.
             $response['status'] = false;
             $response['message'] = new JsonResponse((object) [
-                    'errcode' => 'M_UNRECOGNIZED',
-                    'error' => 'Unrecognized request'
-            ],
-                    404);
+                'errcode' => 'M_UNRECOGNIZED',
+                'error' => 'Unrecognized request'
+            ], 404);
         }
         return $response;
     }
-
-
 }

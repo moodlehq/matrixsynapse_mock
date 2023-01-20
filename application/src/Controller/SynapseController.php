@@ -24,10 +24,9 @@ class SynapseController extends AbstractController {
     public function endpoint(): JsonResponse
     {
         return new JsonResponse((object) [
-                'errcode' => 'M_UNRECOGNIZED',
-                'error' => 'Unrecognized request'
-        ],
-        404);
+            'errcode' => 'M_UNRECOGNIZED',
+            'error' => 'Unrecognized request'
+        ], 404);
     }
 
     /**
@@ -65,10 +64,9 @@ class SynapseController extends AbstractController {
         } elseif ($method == 'GET' && !$user) {
             // Get but no user.
             return new JsonResponse((object) [
-                    'errcode' => 'M_NOT_FOUND',
-                    'error' => 'User not found'
-            ],
-                    404);
+                'errcode' => 'M_NOT_FOUND',
+                'error' => 'User not found'
+            ], 404);
         }
 
         // Finally return user info.
@@ -94,8 +92,7 @@ class SynapseController extends AbstractController {
                 'threepids '=> $threepids,
                 'external_ids' => $externalids,
                 'erased' => false
-        ],
-                200);
+        ], 200);
     }
 
     /**

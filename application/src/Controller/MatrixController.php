@@ -22,10 +22,9 @@ class MatrixController extends AbstractController {
     public function endpoint(): JsonResponse
     {
         return new JsonResponse((object) [
-                'errcode' => 'M_UNRECOGNIZED',
-                'error' => 'Unrecognized request'
-        ],
-        404);
+            'errcode' => 'M_UNRECOGNIZED',
+            'error' => 'Unrecognized request'
+        ], 404);
     }
 
     /**
@@ -71,20 +70,19 @@ class MatrixController extends AbstractController {
         $entityManager->flush();
 
         return new JsonResponse((object) [
-                'room_id' => $roomID,
-        ],
-                200);
+            'room_id' => $roomID,
+        ], 200);
     }
 
     /**
      * Update various room state components.
      *
-     * @Route("/rooms/{roomID}/state/{stateType}", name="roomState")
+     * @Route("/rooms/{roomID}/state/{eventType}", name="roomState")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
      */
-    public function roomState(string $serverID, string $roomID, string $stateType, Request $request): JsonResponse {
+    public function roomState(string $serverID, string $roomID, string $eventType, Request $request): JsonResponse {
         // Check call auth.
         $authCheck = ApiCheck::checkAuth($request);
         if (!$authCheck['status']) {
@@ -104,31 +102,29 @@ class MatrixController extends AbstractController {
         $room = $this->roomExists($roomID);
         if (empty($room)) {
             return new JsonResponse((object) [
-                    'errcode' => 'M_FORBIDDEN',
-                    'error' => 'Unknown room'
-            ],
-                    403);
+                'errcode' => 'M_FORBIDDEN',
+                'error' => 'Unknown room'
+            ], 403);
         }
 
         $payload = json_decode($request->getContent());
 
-        if ($stateType == 'm.room.topic') {
+        if ($eventType == 'm.room.topic') {
             $room->setTopic($payload->topic);
 
-        } elseif ($stateType == 'm.room.name') {
+        } elseif ($eventType == 'm.room.name') {
             // Update room name.
             $room->setName($payload->name);
 
-        } elseif ($stateType == 'm.room.avatar') {
+        } elseif ($eventType == 'm.room.avatar') {
             // Update room avatar.
             $room->setAvatar($payload->url);
         } else {
             // Unknown state.
             return new JsonResponse((object) [
-                    'errcode' => 'M_UNRECOGNIZED',
-                    'error' => 'Unrecognized request'
-            ],
-                    404);
+                'errcode' => 'M_UNRECOGNIZED',
+                'error' => 'Unrecognized request'
+            ], 404);
         }
 
         $entityManager = $this->getDoctrine()->getManager();
@@ -137,12 +133,11 @@ class MatrixController extends AbstractController {
 
         // Create a mock event ID. This isn't the way Synapse does it (I think), but it's a good enough approximation.
         // This ID doesn't change if the seed data is the same.
-        $eventID = substr(hash('sha256', ($serverID . $roomID . $stateType)), 0, 44);
+        $eventID = substr(hash('sha256', ($serverID . $roomID . $eventType)), 0, 44);
 
         return new JsonResponse((object) [
-                'event_id' => $eventID,
-        ],
-                200);
+            'event_id' => $eventID,
+        ], 200);
     }
 
     /**
@@ -156,7 +151,5 @@ class MatrixController extends AbstractController {
         $entityManager = $this->getDoctrine()->getManager();
 
         return $entityManager->getRepository(Rooms::class)->findOneBy(['roomid' => $roomID]);
-
     }
-
 }
