@@ -44,6 +44,11 @@ class Users
      */
     private $externalids;
 
+    // /**
+    //  * @ORM\OneToMany(targetEntity=Roommembers::class, mappedBy="users")
+    //  */
+    // private $roommembers;
+
     public function __construct()
     {
         $this->threepids = new ArrayCollection();

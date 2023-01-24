@@ -9,7 +9,10 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Users;
 use App\Entity\Threepids;
+use App\Entity\Roommembers;
 use App\Service\ApiCheck;
+use App\Traits\GeneralTrait;
+use App\Traits\MatrixSynapseTrait;
 
 /**
  * API Controller to serve a mock of the Synapse API.
@@ -17,6 +20,8 @@ use App\Service\ApiCheck;
  * @Route("/{serverID}/_synapse/admin/v2")
  */
 class SynapseController extends AbstractController {
+
+    use GeneralTrait, MatrixSynapseTrait;
 
     /**
      * @Route("", name="endpoint")
@@ -166,7 +171,7 @@ class SynapseController extends AbstractController {
         }
 
         // Process external ids.
-        // TODO: External IDs must be unique.
+        $newextID = '';
         if (!empty($payload->external_ids)){
             foreach ($payload->external_ids as $eid) {
                 $externalid = $entityManager->getRepository(Externalids::class)
@@ -175,15 +180,13 @@ class SynapseController extends AbstractController {
                     // New user, or existing user without any associated Externalids.
                     $externalid = new Externalids();
                     $externalid->setAuthProvider($eid->auth_provider);
-                    $externalid->setExternalId($eid->external_id);
                     $externalid->setServerid($serverID);
 
                     $user->addExternalid($externalid);
                     $externalid->setUserid($user);
-                } else {
-                    // Updating existing.
-                    $externalid->setExternalId($eid->external_id);
                 }
+                $newextID = $this->generateUniqueID($eid->external_id);
+                $externalid->setExternalId($newextID);
                 $entityManager->persist($externalid);
             }
             $hasExternalids = true;
@@ -220,9 +223,54 @@ class SynapseController extends AbstractController {
         if ($hasExternalids) {
             $payload->external_ids['validated_at'] = time();
             $payload->external_ids['added_at'] = time();
+            $payload->external_ids[0]->external_id = $newextID;
             $responseObj->threepids = [$payload->external_ids];
         }
 
         return new JsonResponse($responseObj, $status);
+    }
+
+
+    /**
+     * Invite user into a room.
+     *
+     * @Route("/join/{roomID}", name="inviteUser")
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function inviteUser(string $roomID, Request $request): JsonResponse {
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck('POST', $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
+        }
+
+        // Check if room exists.
+        $this->roomExists($roomID);
+
+        $payload = json_decode($request->getContent());
+        $userID = $payload->user_id;
+
+        // Check if the user has already been invited.
+        $this->isUserInvited($roomID, $userID);
+
+        // Check if the user is banned from the group.
+        $this->isUserBanned($roomID, $userID);
+
+        // Store the room member in the DB.
+        $entityManager = $this->getDoctrine()->getManager();
+        $roomMember = new Roommembers();
+
+        $roomMember->setRoomid($roomID);
+        $roomMember->setUserid($userID);
+        $roomMember->setAccepted(true);
+
+        $entityManager->persist($roomMember);
+        $entityManager->flush();
+
+        return new JsonResponse([
+            'room_id' => $roomID
+        ], 200);
     }
 }

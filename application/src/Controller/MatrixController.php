@@ -6,8 +6,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
-use App\Service\ApiCheck;
 use App\Entity\Rooms;
+use App\Entity\Roommembers;
+use App\Traits\GeneralTrait;
+use App\Traits\MatrixSynapseTrait;
 
 /**
  * API Controller to serve a mock of the Matrix API.
@@ -15,6 +17,8 @@ use App\Entity\Rooms;
  * @Route("/{serverID}/_matrix/client/r0")
  */
 class MatrixController extends AbstractController {
+
+    use GeneralTrait, MatrixSynapseTrait;
 
     /**
      * @Route("", name="endpoint")
@@ -36,19 +40,11 @@ class MatrixController extends AbstractController {
      * @return JsonResponse
      */
     public function createRoom(string $serverID, Request $request): JsonResponse {
-        // Check call auth.
-        $authCheck = ApiCheck::checkAuth($request);
-        if (!$authCheck['status']) {
-            // Auth check failed, return error info.
-            return $authCheck['message'];
-        }
-
-        // Check HTTP method is accepted.
-        $method = $request->getMethod();
-        $methodCheck = ApiCheck::checkMethod(['POST'], $method);
-        if (!$methodCheck['status']) {
-            // Method check failed, return error info.
-            return $methodCheck['message'];
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck('POST', $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
         }
 
         $payload = json_decode($request->getContent());
@@ -83,30 +79,16 @@ class MatrixController extends AbstractController {
      * @return JsonResponse
      */
     public function roomState(string $serverID, string $roomID, string $eventType, Request $request): JsonResponse {
-        // Check call auth.
-        $authCheck = ApiCheck::checkAuth($request);
-        if (!$authCheck['status']) {
-            // Auth check failed, return error info.
-            return $authCheck['message'];
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck('PUT', $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
         }
 
-        // Check HTTP method is accepted.
-        $method = $request->getMethod();
-        $methodCheck = ApiCheck::checkMethod(['PUT'], $method);
-        if (!$methodCheck['status']) {
-            // Method check failed, return error info.
-            return $methodCheck['message'];
-        }
-
-        // Check room exists.
-        $room = $this->roomExists($roomID);
-        if (empty($room)) {
-            return new JsonResponse((object) [
-                'errcode' => 'M_FORBIDDEN',
-                'error' => 'Unknown room'
-            ], 403);
-        }
-
+        // 3. Check room exists. If exists, "room" property is added.
+        $roomCheck = $this->roomExists($roomID, true);
+        $room = $roomCheck['room'];
         $payload = json_decode($request->getContent());
 
         if ($eventType == 'm.room.topic') {
@@ -141,15 +123,57 @@ class MatrixController extends AbstractController {
     }
 
     /**
-     * Check if room exists.
+     * Invite user into a room.
      *
-     * @param string $roomID
-     * @return object|null
+     * @Route("/rooms/{roomID}/invite", name="inviteUser")
+     * @param Request $request
+     * @return JsonResponse
      */
-    private function roomExists(string $roomID): ?object
-    {
-        $entityManager = $this->getDoctrine()->getManager();
+    public function inviteUser(string $roomID, Request $request): JsonResponse {
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck('POST', $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
+        }
 
-        return $entityManager->getRepository(Rooms::class)->findOneBy(['roomid' => $roomID]);
+        // Check if room exists.
+        $this->roomExists($roomID);
+
+        $payload = json_decode($request->getContent());
+        $userID = $payload->userid;
+
+        // Check if the user has already been invited.
+        $this->isUserInvited($roomID, $userID);
+
+        // Check if the user is banned from the group.
+        $this->isUserBanned($roomID, $userID);
+
+        // Check if "currentuserid" is sent with the body.
+        if (!isset($payload->currentuserid)) {
+            return new JsonResponse((object) [
+                'errcode' => 'M_BAD_JSON',
+                'message' => '"currentuserid" has not been sent as part of the body'
+            ], 400);
+        }
+
+        // Check if the inviter is a member of the group.
+        $this->validateRoomInviter($roomID, $payload->currentuserid);
+
+        // Store the room member in the DB.
+        $entityManager = $this->getDoctrine()->getManager();
+        $roomMember = new Roommembers();
+
+        $roomMember->setRoomid($roomID);
+        $roomMember->setReason($payload->reason);
+        $roomMember->setUserid($userID);
+        $roomMember->setAccepted();
+
+        $entityManager->persist($roomMember);
+        $entityManager->flush();
+
+        return new JsonResponse((object) [
+            'message' => 'The user has been invited to join the room'
+        ], 200);
     }
 }

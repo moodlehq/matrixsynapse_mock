@@ -3,7 +3,10 @@
 namespace App\Entity;
 
 use App\Repository\RoomsRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Entity\Roommembers;
 
 /**
  * @ORM\Entity(repositoryClass=RoomsRepository::class)
@@ -36,6 +39,16 @@ class Rooms
      * @ORM\Column(type="string", length=512, nullable=true)
      */
     private $avatar;
+
+    // /**
+    //  * @ORM\OneToMany(targetEntity=Roommembers::class, mappedBy="rooms")
+    //  */
+    // private $roommembers;
+
+    // public function __construct()
+    // {
+    //     $this->roommembers = new ArrayCollection();
+    // }
 
     public function getId(): ?int
     {
@@ -89,4 +102,12 @@ class Rooms
 
         return $this;
     }
+
+    // /**
+    //  * @return Collection<object, Roommembers>
+    //  */
+    // public function getRoommembers(): Collection
+    // {
+    //     return $this->roommembers;
+    // }
 }
