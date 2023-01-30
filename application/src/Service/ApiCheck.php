@@ -2,10 +2,25 @@
 
 namespace App\Service;
 
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use App\Entity\Tokens;
+use Doctrine\ORM\EntityManagerInterface;
 
-class ApiCheck {
+class ApiCheck extends AbstractController {
+
+    private $entityManger;
+
+    /**
+     * Constructor function.
+     *
+     * @param EntityManagerInterface $entityManger
+     */
+    public function __construct(EntityManagerInterface $entityManger)
+    {
+        $this->entityManger = $entityManger;
+    }
 
     /**
      * Check if a correct Authorization header has been received.
@@ -13,7 +28,7 @@ class ApiCheck {
      * @param Request $request
      * @return array $response
      */
-    public static function checkAuth(Request $request): array
+    public function checkAuth($request): array
     {
         $response = ['status' => true, 'message' => ''];
 
@@ -28,7 +43,7 @@ class ApiCheck {
             ], 401);
         } else {
             $authToken = substr($authHeader, 7);
-            if (!self::isValidAuthToken($authToken)){
+            if (!$this->isValidAuthToken($authToken)){
                 // Auth token is not valid.
                 $response['status'] = false;
                 $response['message'] = new JsonResponse((object) [
@@ -46,10 +61,10 @@ class ApiCheck {
      * @param string $authToken
      * @return bool
      */
-    private static function isValidAuthToken(string $authToken): bool
+    private function isValidAuthToken(string $authToken): bool
     {
-        // TODO: check supplied token against list in DB. For now everything is valid.
-        return true;
+        $check = $this->entityManger->getRepository(Tokens::class)->findOneBy(['accesstoken' => $authToken]);
+        return !empty($check);
     }
 
     /**
@@ -59,7 +74,7 @@ class ApiCheck {
      * @param string $method
      * @return array $response
      */
-    public static function checkMethod(array $acceptedTypes, string $method): array
+    public function checkMethod(array $acceptedTypes, string $method): array
     {
         $response = ['status' => true, 'message' => ''];
 

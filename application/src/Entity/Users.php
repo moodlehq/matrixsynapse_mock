@@ -44,15 +44,32 @@ class Users
      */
     private $externalids;
 
-    // /**
-    //  * @ORM\OneToMany(targetEntity=Roommembers::class, mappedBy="users")
-    //  */
-    // private $roommembers;
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $admin;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $passwordpattern;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Tokens::class, mappedBy="userid")
+     */
+    private $tokens;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Passwords::class, mappedBy="userid")
+     */
+    private $passwords;
 
     public function __construct()
     {
         $this->threepids = new ArrayCollection();
         $this->externalids = new ArrayCollection();
+        $this->tokens = new ArrayCollection();
+        $this->passwords = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -126,6 +143,30 @@ class Users
         return $this;
     }
 
+    public function getAdmin(): ?bool
+    {
+        return $this->admin;
+    }
+
+    public function setAdmin(bool $admin = false): self
+    {
+        $this->admin = $admin;
+
+        return $this;
+    }
+
+    public function getPasswordpattern(): ?string
+    {
+        return $this->passwordpattern;
+    }
+
+    public function setPasswordpattern(string $passwordpattern = null): self
+    {
+        $this->passwordpattern = $passwordpattern;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, Externalids>
      */
@@ -152,6 +193,38 @@ class Users
                 $externalid->setUserid(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<Tokens>
+     */
+    public function getTokens(): Collection
+    {
+        return $this->tokens;
+    }
+
+    public function addToken(Tokens $token): self
+    {
+        $token->setUserid($this);
+        $this->tokens->add($token);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<Passwords>
+     */
+    public function getPasswords(): Collection
+    {
+        return $this->passwords;
+    }
+
+    public function addPasswords(Passwords $password): self
+    {
+        $password->setUserid($this);
+        $this->passwords->add($password);
 
         return $this;
     }

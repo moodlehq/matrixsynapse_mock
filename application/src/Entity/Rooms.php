@@ -40,16 +40,6 @@ class Rooms
      */
     private $avatar;
 
-    // /**
-    //  * @ORM\OneToMany(targetEntity=Roommembers::class, mappedBy="rooms")
-    //  */
-    // private $roommembers;
-
-    // public function __construct()
-    // {
-    //     $this->roommembers = new ArrayCollection();
-    // }
-
     public function getId(): ?int
     {
         return $this->id;
@@ -102,12 +92,4 @@ class Rooms
 
         return $this;
     }
-
-    // /**
-    //  * @return Collection<object, Roommembers>
-    //  */
-    // public function getRoommembers(): Collection
-    // {
-    //     return $this->roommembers;
-    // }
 }

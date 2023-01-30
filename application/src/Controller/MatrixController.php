@@ -2,14 +2,17 @@
 
 namespace App\Controller;
 
+use App\Entity\Passwords;
+use App\Entity\Rooms;
+use App\Entity\Roommembers;
+use App\Entity\Tokens;
+use App\Entity\Users;
+use App\Traits\GeneralTrait;
+use App\Traits\MatrixSynapseTrait;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
-use App\Entity\Rooms;
-use App\Entity\Roommembers;
-use App\Traits\GeneralTrait;
-use App\Traits\MatrixSynapseTrait;
 
 /**
  * API Controller to serve a mock of the Matrix API.
@@ -32,6 +35,74 @@ class MatrixController extends AbstractController {
     }
 
     /**
+     * Login a user.
+     *
+     * @Route("/login", name="login")
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function login(Request $request): JsonResponse {
+        $payload = json_decode($request->getContent());
+        $check = $this->validateRequest((array)$payload, ['identifier', 'type']);
+        if (!$check['status']) {
+            return $check['message'];
+        }
+
+        if ($payload->type === 'm.login.password') {
+            if (!isset($payload->password)) {
+                return new JsonResponse((object) [
+                    'errcode' => 'M_UNKNOWN',
+                    'error' => '"Password" is required.'
+                ], 400);
+            }
+
+            // 1. Check if type is in the $palyload->identifier.
+            // 2. Return loginidentifier property if no error.
+            $check = $this->loginIdentifierType($payload->identifier);
+            if (!$check['status']) {
+                return $check['message'];
+            }
+
+            $entityManager = $this->getDoctrine()->getManager();
+            $user = $entityManager->getRepository(Users::class)->findOneBy($check['loginidentifier']);
+            $password = $entityManager->getRepository(Passwords::class)->findOneBy([
+                'password' => $this->hashPassword($payload->password, $user->getPasswordpattern())['token'],
+                'userid' => $user->getId()
+            ]);
+
+            // Check if user with its password is found.
+            if ($user && $password) {
+                $token = $entityManager->getRepository(Tokens::class)->findOneBy(['userid' => $user->getId()]);
+
+                // Check if refresh_token is in the body and set to true,
+                // then generate a new refresh_token.
+                if (isset($payload->refresh_token) && $payload->refresh_token === true) {
+                    $token->setRefreshToken($this->generateToken('refresh-token'));
+                    $entityManager->persist($token);
+                    $entityManager->flush();
+
+                    $response['refresh_token'] = $token->getRefreshToken();
+                }
+                $response['user_id'] = $user->getUserid();
+                $response['access_token'] = $token->getAccessToken();
+                $response['home_server'] = $request->getHost();
+
+                return new JsonResponse((object) $response, 200);
+            } else {
+                return new JsonResponse((object) [
+                    'errcode' => 'M_UNKNOWN',
+                    'error' => 'Invalid login credentials'
+                ], 403);
+            }
+        }
+
+        return new JsonResponse((object) [
+            'errcode' => 'M_UNKNOWN',
+            'error' => 'Bad login type.'
+        ], 403);
+    }
+
+    /**
      * Create Matrix room.
      *
      * @Route("/createRoom", name="createRoom")
@@ -42,7 +113,7 @@ class MatrixController extends AbstractController {
     public function createRoom(string $serverID, Request $request): JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
-        $accessCheck = $this->authHttpCheck('POST', $request);
+        $accessCheck = $this->authHttpCheck(['POST'], $request);
         if (!$accessCheck['status']) {
             return $accessCheck['message'];
         }
@@ -81,13 +152,16 @@ class MatrixController extends AbstractController {
     public function roomState(string $serverID, string $roomID, string $eventType, Request $request): JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
-        $accessCheck = $this->authHttpCheck('PUT', $request);
+        $accessCheck = $this->authHttpCheck(['PUT'], $request);
         if (!$accessCheck['status']) {
             return $accessCheck['message'];
         }
 
         // 3. Check room exists. If exists, "room" property is added.
         $roomCheck = $this->roomExists($roomID, true);
+        if (!$roomCheck['status']) {
+            return $roomCheck['message'];
+        }
         $room = $roomCheck['room'];
         $payload = json_decode($request->getContent());
 
@@ -132,7 +206,7 @@ class MatrixController extends AbstractController {
     public function inviteUser(string $roomID, Request $request): JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
-        $accessCheck = $this->authHttpCheck('POST', $request);
+        $accessCheck = $this->authHttpCheck(['POST'], $request);
         if (!$accessCheck['status']) {
             return $accessCheck['message'];
         }

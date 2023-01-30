@@ -2,32 +2,32 @@
 
 namespace App\Repository;
 
-use App\Entity\Users;
+use App\Entity\Tokens;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Users>
+ * @extends ServiceEntityRepository<Tokens>
  *
- * @method Users|null find($id, $lockMode = null, $lockVersion = null)
- * @method Users|null findOneBy(array $criteria, array $orderBy = null)
- * @method Users[]    findAll()
- * @method Users[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Tokens|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Tokens|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Tokens[]    findAll()
+ * @method Tokens[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class UsersRepository extends ServiceEntityRepository
+class TokensRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Users::class);
+        parent::__construct($registry, Tokens::class);
     }
 
     /**
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function add(Users $entity, bool $flush = true): void
+    public function add(Tokens $entity, bool $flush = true): void
     {
         $this->_em->persist($entity);
         if ($flush) {
@@ -39,7 +39,7 @@ class UsersRepository extends ServiceEntityRepository
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function remove(Users $entity, bool $flush = true): void
+    public function remove(Tokens $entity, bool $flush = true): void
     {
         $this->_em->remove($entity);
         if ($flush) {

@@ -10,7 +10,8 @@ use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Users;
 use App\Entity\Threepids;
 use App\Entity\Roommembers;
-use App\Service\ApiCheck;
+use App\Entity\Tokens;
+use App\Entity\Passwords;
 use App\Traits\GeneralTrait;
 use App\Traits\MatrixSynapseTrait;
 
@@ -35,25 +36,87 @@ class SynapseController extends AbstractController {
     }
 
     /**
+     * Create admin user.
+     *
+     * @Route("/create-admin", name="createAdmin")
+     * @param string $serverID
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function createAdmin(string $serverID, Request $request) {
+        $method = $request->getMethod();
+        if ($method === 'POST') {
+            $entityManager = $this->getDoctrine()->getManager();
+
+            $user = $entityManager->getRepository(Users::class)->findOneBy(['userid' => '@admin:synapse']);
+            if (!$user) {
+                $user = new Users();
+                $user->setServerid($serverID);
+                $user->setUserid('@admin:synapse');
+                $user->setDisplayname('Admin User');
+                $user->setAdmin(true);
+            }
+
+            // Process tokens.
+            $token = $entityManager->getRepository(Tokens::class)
+                    ->findOneBy(['userid' => $user->getId()]);
+            if (!$token) {
+                // New user, or existing user without any associated Tokens.
+                $token = new Tokens();
+                $token->setAccesstoken($this->generateToken('access-token'));
+                $token->setExpiresinms();
+                $token->setServerid($serverID);
+
+                $user->addtoken($token);
+                $token->setUserid($user);
+                $entityManager->persist($token);
+            }
+
+            // Process password.
+            $passwords = $entityManager->getRepository(Passwords::class)
+                    ->findOneBy(['userid' => $user->getId()]);
+            if (!$passwords) {
+                // 1. Generates and returns token as password.
+                // 2. Generates and returns token pattern.
+                $password = $this->hashPassword('password', null, true);
+
+                // New user, or existing user without any associated Tokens.
+                $passwords = new Passwords();
+                $passwords->setPassword($password['token']);
+
+                $user->addPasswords($passwords);
+                $user->setPasswordpattern($password['pattern']);
+                $passwords->setUserid($user);
+                $entityManager->persist($passwords);
+            }
+            $entityManager->persist($user);
+            $entityManager->flush();
+
+            return new JsonResponse(
+                'Admin user has already been created.',
+                200
+            );
+        } else {
+            return new JsonResponse(
+                'Only POST method is allowed.',
+                403
+            );
+        }
+    }
+
+    /**
      * Handle Synapse user registration.
      *
      * @Route("/users/{userID}", name="registerUser")
      */
     public function registerUser(string $serverID, string $userID, Request $request): JsonResponse
     {
-        // Check call auth.
-        $authCheck = ApiCheck::checkAuth($request);
-        if (!$authCheck['status']) {
-            // Auth check failed, return error info.
-            return $authCheck['message'];
-        }
-
-        // Check HTTP method is accepted.
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
         $method = $request->getMethod();
-        $methodCheck = ApiCheck::checkMethod(['PUT', 'GET'], $method);
-        if (!$methodCheck['status']) {
-            // Method check failed, return error info.
-            return $methodCheck['message'];
+        $accessCheck = $this->authHttpCheck(['PUT', 'GET'], $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
         }
 
         // Add, update of get user info.
@@ -146,6 +209,8 @@ class SynapseController extends AbstractController {
         $user->setServerid($serverID);
         $user->setUserid($userID);
         $user->setDisplayname($payload->displayname);
+        $user->setAdmin();
+        $user->setPasswordpattern();
 
         // Process threepids.
         if (!empty($payload->threepids)){
@@ -170,8 +235,19 @@ class SynapseController extends AbstractController {
             $hasThreepids = true;
         }
 
+        // Process access tokens.
+        $token = $entityManager->getRepository(Tokens::class)->findOneBy(['userid' => $user->getId()]);
+        if (!$token) {
+            // New user, or existing user without any associated Tokens.
+            $token = new Tokens();
+            $token->setAccesstoken($this->generateToken('access-token'));
+
+            $user->addToken($token);
+            $token->setUserid($user);
+            $entityManager->persist($token);
+        }
+
         // Process external ids.
-        $newextID = '';
         if (!empty($payload->external_ids)){
             foreach ($payload->external_ids as $eid) {
                 $externalid = $entityManager->getRepository(Externalids::class)
@@ -185,8 +261,7 @@ class SynapseController extends AbstractController {
                     $user->addExternalid($externalid);
                     $externalid->setUserid($user);
                 }
-                $newextID = $this->generateUniqueID($eid->external_id);
-                $externalid->setExternalId($newextID);
+                $externalid->setExternalId($eid->external_id);
                 $entityManager->persist($externalid);
             }
             $hasExternalids = true;
@@ -223,7 +298,6 @@ class SynapseController extends AbstractController {
         if ($hasExternalids) {
             $payload->external_ids['validated_at'] = time();
             $payload->external_ids['added_at'] = time();
-            $payload->external_ids[0]->external_id = $newextID;
             $responseObj->threepids = [$payload->external_ids];
         }
 
@@ -241,22 +315,35 @@ class SynapseController extends AbstractController {
     public function inviteUser(string $roomID, Request $request): JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
-        $accessCheck = $this->authHttpCheck('POST', $request);
+        $accessCheck = $this->authHttpCheck(['POST'], $request);
         if (!$accessCheck['status']) {
             return $accessCheck['message'];
         }
 
         // Check if room exists.
-        $this->roomExists($roomID);
+        $check = $this->roomExists($roomID);
+        if (!$check['status']) {
+            return $check['message'];
+        }
 
         $payload = json_decode($request->getContent());
+        $check = $this->validateRequest((array)$payload, ['user_id']);
+        if (!$check['status']) {
+            return $check['message'];
+        }
         $userID = $payload->user_id;
 
         // Check if the user has already been invited.
-        $this->isUserInvited($roomID, $userID);
+        $check = $this->isUserInvited($roomID, $userID);
+        if (!$check['status']) {
+            return $check['message'];
+        }
 
         // Check if the user is banned from the group.
-        $this->isUserBanned($roomID, $userID);
+        $check = $this->isUserBanned($roomID, $userID);
+        if (!$check['status']) {
+            return $check['message'];
+        }
 
         // Store the room member in the DB.
         $entityManager = $this->getDoctrine()->getManager();
@@ -265,11 +352,12 @@ class SynapseController extends AbstractController {
         $roomMember->setRoomid($roomID);
         $roomMember->setUserid($userID);
         $roomMember->setAccepted(true);
+        $roomMember->setBanned();
 
         $entityManager->persist($roomMember);
         $entityManager->flush();
 
-        return new JsonResponse([
+        return new JsonResponse((object) [
             'room_id' => $roomID
         ], 200);
     }

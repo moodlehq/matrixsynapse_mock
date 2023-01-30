@@ -49,50 +49,6 @@ curl -i --header "Authorization: Bearer syt_YWRtaW4_iNofAsbInAInYAFwkmdi_1oVMxI"
 http://localhost:8001/someServerID/_synapse/admin/v2/users/@anewuser:synapse
 ```
 
-### Matrix
-#### Create a room
-```
-curl -i -X POST -H 'Authorization: Bearer syt_YWRtaW4_KXUwoITuowupgGEIGNuK_4MLu3S' \
--d '{"name":"curl room","topic":"curly topic","preset":"private_chat","visibility":"private","initial_state":[{"type":"m.room.encryption","state_key":"","content":{"algorithm":"m.megolm.v1.aes-sha2"}}]}' \
-http://localhost:8001/someServerID/_matrix/client/r0/createRoom
-```
-
-#### Update room topic
-```
-curl -i -X PUT -H 'Authorization: Bearer syt_YWRtaW4_KXUwoITuowupgGEIGNuK_4MLu3S' \
--d '{"topic":"the topic updated"}' \
-http://localhost:8001/someServerID/_matrix/client/r0/rooms/!IWCtGkszxDkBUrIsGg%3Asynapse/state/m.room.topic
-```
-
-#### Update room name
-```
-curl -i -X PUT -H 'Authorization: Bearer syt_YWRtaW4_KXUwoITuowupgGEIGNuK_4MLu3S' \
--d '{"name":"new room name"}' \
-http://localhost:8001/someServerID/_matrix/client/r0/rooms/!IWCtGkszxDkBUrIsGg%3Asynapse/state/m.room.name
-```
-
-#### Setting room avatar
-This is a two part process. First the image to be used as the room avatar to Synapse. Next we need to set the avatar to the location of the image.
-
-1. Upload the file:
-    ```
-    curl -X POST -H 'Content-Type: image/png' -H 'Authorization: Bearer syt_YWRtaW4_KXUwoITuowupgGEIGNuK_4MLu3S' \
-    -d @/location/of/image/imagename.png \
-    http://localhost:8001/someServerID/_matrix/media/r0/upload?filename=imagename.png
-    ```
-    Above request will return the location of the saved image:
-    ```
-    {"content_uri":"mxc://localhost/8331c9b3667246a59534a32c"}
-    ```
-    `content_uri` will be used as `url`'s value in the second step.
-
-2. Update the avatar:
-    ```
-    curl -X POST -H 'Authorization: Bearer syt_YWRtaW4_KXUwoITuowupgGEIGNuK_4MLu3S' \
-    -d '{"url":"mxc://localhost/8331c9b3667246a59534a32c"}' \
-    http://localhost:8001/someServerID/_matrix/client/r0/rooms/!IWCtGkszxDkBUrIsGg%3Asynapse/state/m.room.avatar
-    ```
-
 ## Automated tests
 You need to define `TEST_MOD_SYNAPSE_MOCK_SERVER` in your config.php when running automated tests like PHPUnit and Behat.
 Otherwise, most of the Matrix tests will be marked skipped.

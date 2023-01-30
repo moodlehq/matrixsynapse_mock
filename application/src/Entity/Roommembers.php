@@ -44,18 +44,6 @@ class Roommembers
      */
     private $banned;
 
-    // /**
-    //  * @ORM\ManyToOne(targetEntity=Rooms::class, inversedBy="roommembers")
-    //  * @ORM\JoinColumn(nullable=false)
-    //  */
-    // private $rooms;
-
-    // /**
-    //  * @ORM\ManyToOne(targetEntity=Users::class, inversedBy="roommembers")
-    //  * @ORM\JoinColumn(nullable=false)
-    //  */
-    // private $users;
-
     public function getId(): ?int
     {
         return $this->id;

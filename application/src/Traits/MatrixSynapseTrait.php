@@ -13,16 +13,21 @@ trait MatrixSynapseTrait {
      *
      * @param string $roomID
      * @param string $userID
-     * @return JsonResponse|null
+     * @return array
      */
-    private function isUserInvited(string $roomID = null, string $userID = null): ?JsonResponse {
+    private function isUserInvited(string $roomID = null, string $userID = null): ?array {
         $userCheck = $this->getRoomMember($roomID, $userID);
         if (!empty($userCheck)) {
-            return new JsonResponse((object) [
+            $response['status'] = false;
+            $response['message'] = new JsonResponse((object) [
                 'errcode' => 'M_USER_EXISTS',
                 'error' => 'The invitee is already a member of the room'
             ], 403);
+
+            return $response;
         }
+
+        return $this->ok();
     }
 
     /**
@@ -30,24 +35,32 @@ trait MatrixSynapseTrait {
      *
      * @param string $roomID
      * @param string $userID
-     * @return object|null
+     * @return array
      */
-    private function validateRoomInviter(string $roomID, string $userID): ?object
+    private function validateRoomInviter(string $roomID, string $userID): ?array
     {
         if ($userID) {
             $userCheck = $this->getRoomMember($roomID, $userID);
             if (!empty($userCheck)) {
-                return new JsonResponse((object) [
+                $response['status'] = false;
+                $response['message'] = new JsonResponse((object) [
                     'errcode' => 'M_NOT_MEMBER',
                     'error' => 'You have to be a group member to be able to invite a user.'
                 ], 403);
+
+                return $response;
             }
         } else {
-            return new JsonResponse((object) [
+            $response['status'] = false;
+            $response['message'] = new JsonResponse((object) [
                 'errcode' => 'M_NOT_MEMBER',
                 'error' => 'You are not a group member yet.'
             ], 403);
+
+            return $response;
         }
+
+        return $this->ok();
     }
 
     /**
@@ -68,19 +81,23 @@ trait MatrixSynapseTrait {
      *
      * @param string $roomID
      * @param string $userID
-     * @return JsonResponse|null
+     * @return array
      */
-    private function isUserBanned(string $roomID, string $userID): ?JsonResponse
+    private function isUserBanned(string $roomID, string $userID): ?array
     {
         $entityManager = $this->getDoctrine()->getManager();
         $data = $entityManager->getRepository(Roommembers::class)->findOneBy(['roomid' => $roomID, 'userid' => $userID, 'banned' => true]);
         if (!empty($data)) {
-            return new JsonResponse((object) [
+            $response['status'] = false;
+            $response['message'] = new JsonResponse((object) [
                 'errcode' => 'M_USER_IS_BANNED',
                 'error' => 'you cannot invite the user due to being banned from the group.'
             ], 403);
+
+            return $response;
         }
-        return null;
+
+        return $this->ok();
     }
 
     /**
@@ -89,20 +106,27 @@ trait MatrixSynapseTrait {
      * @param string $roomID
      * @param bool $getRoom Whether or not to return room object.
      */
-    private function roomExists(string $roomID, bool $getRoom = false) {
+    private function roomExists(string $roomID = null, bool $getRoom = false) {
         if ($roomID) {
             // Check room exists.
             $room = $this->getRoom($roomID);
             if (empty($room)) {
-                return  new JsonResponse((object) [
+                $response['status'] = false;
+                $response['message'] = new JsonResponse((object) [
                     'errcode' => 'M_FORBIDDEN',
                     'error' => 'Unknown room'
                 ], 403);
+
+                return $response;
             }
 
             // Add "room" property if $getRoom is true.
-            if ($getRoom) return ['room' => $room];
+            if ($getRoom) return [
+                'status' => true, 'room' => $room
+            ];
         }
+
+        return $this->ok();
     }
 
     /**
@@ -115,5 +139,9 @@ trait MatrixSynapseTrait {
     {
         $entityManager = $this->getDoctrine()->getManager();
         return $entityManager->getRepository(Rooms::class)->findOneBy(['roomid' => $roomID]);
+    }
+
+    private function ok() {
+        return ['status' => true];
     }
 }
