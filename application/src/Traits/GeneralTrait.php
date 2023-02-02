@@ -57,6 +57,16 @@ trait GeneralTrait {
     }
 
     /**
+     * Generates a unique external id.
+     *
+     * @param string $externalId
+     * @return string
+     */
+    private function generateExternalId(string $externalId = null): string {
+        return hash('sha256', $externalId);
+    }
+
+    /**
      * Hashes the password.
      *
      * @param string $extra
@@ -67,9 +77,9 @@ trait GeneralTrait {
         $token = null;
         $previousPosition = 0;
         $createdTokenPattern = [];
-        $dashedPattern = explode(',', $dashedPattern) ?? [];
+        $dashedPattern = $dashedPattern ? explode(',', $dashedPattern) : [];
         for ($i = 0; $i < strlen($string); $i++) {
-            $randomDashedPosition = (int)$dashedPattern[$i] ?? (int)rand(1, 10);
+            $randomDashedPosition = count($dashedPattern) > 0 ? (int)$dashedPattern[$i] : (int)rand(1, 10);
             if (count($dashedPattern) > 0) {
                 $previousPosition = (int)($previousPosition + $randomDashedPosition);
                 $token = substr_replace($token ?? $string, '-', $previousPosition, 1);

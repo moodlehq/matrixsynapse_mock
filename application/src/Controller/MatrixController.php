@@ -38,12 +38,20 @@ class MatrixController extends AbstractController {
      * Login a user.
      *
      * @Route("/login", name="login")
+     * @param string $serverID
      * @param Request $request
      * @return JsonResponse
      */
-    public function login(Request $request): JsonResponse {
+    public function login(string $serverID, Request $request): JsonResponse {
         $payload = json_decode($request->getContent());
         $check = $this->validateRequest((array)$payload, ['identifier', 'type']);
+        if (!$check['status']) {
+            return $check['message'];
+        }
+
+        // 1. Check if type is in the $palyload->identifier.
+        // 2. Return loginidentifier property if no error.
+        $check = $this->loginIdentifierType($payload->identifier);
         if (!$check['status']) {
             return $check['message'];
         }
@@ -56,13 +64,6 @@ class MatrixController extends AbstractController {
                 ], 400);
             }
 
-            // 1. Check if type is in the $palyload->identifier.
-            // 2. Return loginidentifier property if no error.
-            $check = $this->loginIdentifierType($payload->identifier);
-            if (!$check['status']) {
-                return $check['message'];
-            }
-
             $entityManager = $this->getDoctrine()->getManager();
             $user = $entityManager->getRepository(Users::class)->findOneBy($check['loginidentifier']);
             $password = $entityManager->getRepository(Passwords::class)->findOneBy([
@@ -73,6 +74,11 @@ class MatrixController extends AbstractController {
             // Check if user with its password is found.
             if ($user && $password) {
                 $token = $entityManager->getRepository(Tokens::class)->findOneBy(['userid' => $user->getId()]);
+
+                // Assign client server id if the server id is NULL.
+                if (is_null($token->getServerid())) {
+                    $token->setServerid($serverID);
+                }
 
                 // Check if refresh_token is in the body and set to true,
                 // then generate a new refresh_token.
@@ -100,6 +106,42 @@ class MatrixController extends AbstractController {
             'errcode' => 'M_UNKNOWN',
             'error' => 'Bad login type.'
         ], 403);
+    }
+
+    /**
+     * Refresh the tokens.
+     *
+     * @Route("/refresh", name="refresh")
+     * @param string $serverID
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function refresh(string $serverID, Request $request): JsonResponse {
+        $payload = json_decode($request->getContent());
+        $check = $this->validateRequest((array)$payload, ['refresh_token']);
+        if (!$check['status']) {
+            return $check['message'];
+        }
+
+        $tokens = $this->getToken($serverID, $payload->refresh_token);
+        if (!empty($tokens)) {
+            $tokens->setAccesstoken($this->generateToken('access-token'));
+            $tokens->setRefreshtoken($this->generateToken('refresh-token'));
+
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($tokens);
+            $entityManager->flush();
+
+            return new JsonResponse((object)[
+                'access_token' => $tokens->getAccesstoken(),
+                'refresh_token' => $tokens->getRefreshtoken()
+            ], 200);
+        } else {
+            return new JsonResponse((object)[
+                'errcode' => 'M_UNKNOWN_TOKEN',
+                'refresh_token' => 'Invalid token'
+            ], 401);
+        }
     }
 
     /**
@@ -142,6 +184,44 @@ class MatrixController extends AbstractController {
     }
 
     /**
+     * Create Matrix room.
+     *
+     * @Route("/rooms/{roomID}/kick", name="kick")
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function kick(string $roomID, Request $request) : JsonResponse {
+        // Check room exists.
+        $roomCheck = $this->roomExists($roomID);
+        if (!$roomCheck['status']) {
+            return $roomCheck['message'];
+        }
+
+        $payload = json_decode($request->getContent());
+        $check = $this->validateRequest((array)$payload, ['reason', 'user_id']);
+        if (!$check['status']) {
+            return $check['message'];
+        }
+
+        $roommembers = $this->getRoomMember($roomID, $payload->user_id);
+        if (empty($roommembers)) {
+            return new JsonResponse((object) [
+                'errcode' => 'M_NOT_MEMBER',
+                'error' => 'The target user_id is not a room member.'
+            ], 403);
+        }
+
+        // Update th membership.
+        $roommembers->setState('leave');
+        $roommembers->setReason($payload->reason);
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($roommembers);
+        $entityManager->flush();
+        return new JsonResponse((object)[]);
+    }
+
+    /**
      * Update various room state components.
      *
      * @Route("/rooms/{roomID}/state/{eventType}", name="roomState")
@@ -157,7 +237,7 @@ class MatrixController extends AbstractController {
             return $accessCheck['message'];
         }
 
-        // 3. Check room exists. If exists, "room" property is added.
+        // Check room exists. If exists, "room" property is added.
         $roomCheck = $this->roomExists($roomID, true);
         if (!$roomCheck['status']) {
             return $roomCheck['message'];
@@ -218,10 +298,16 @@ class MatrixController extends AbstractController {
         $userID = $payload->userid;
 
         // Check if the user has already been invited.
-        $this->isUserInvited($roomID, $userID);
+        $check = $this->isUserInvited($roomID, $userID);
+        if (!$check['status']) {
+            return $check['message'];
+        }
 
         // Check if the user is banned from the group.
-        $this->isUserBanned($roomID, $userID);
+        $check = $this->isUserBanned($roomID, $userID);
+        if (!$check['status']) {
+            return $check['message'];
+        }
 
         // Check if "currentuserid" is sent with the body.
         if (!isset($payload->currentuserid)) {

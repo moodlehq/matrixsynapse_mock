@@ -44,6 +44,11 @@ class Roommembers
      */
     private $banned;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $state;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -105,6 +110,18 @@ class Roommembers
     public function setBanned(bool $banned = false): self
     {
         $this->banned = $banned;
+
+        return $this;
+    }
+
+    public function getState(): ?bool
+    {
+        return $this->state;
+    }
+
+    public function setState(string $state = null): self
+    {
+        $this->state = $state;
 
         return $this;
     }

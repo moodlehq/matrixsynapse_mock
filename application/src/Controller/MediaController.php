@@ -2,12 +2,15 @@
 
 namespace App\Controller;
 
+use App\Entity\Medias;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use App\Service\ApiCheck;
-
+use App\Traits\GeneralTrait;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\File\File;
 
 /**
  * API Controller to serve a mock of the Matrix API for media requests.
@@ -15,6 +18,8 @@ use App\Service\ApiCheck;
  * @Route("/{serverID}/_matrix/media/r0")
  */
 class MediaController extends AbstractController {
+
+    use GeneralTrait;
 
     /**
      * @Route("", name="endpoint")
@@ -36,30 +41,30 @@ class MediaController extends AbstractController {
      * @return JsonResponse
      */
     public function uploadMedia(string $serverID, Request $request): JsonResponse {
-        // Check call auth.
-        $authCheck = ApiCheck::checkAuth($request);
-        if (!$authCheck['status']) {
-            // Auth check failed, return error info.
-            return $authCheck['message'];
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck(['POST'], $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
         }
 
-        // Check HTTP method is accepted.
-        $method = $request->getMethod();
-        $methodCheck = ApiCheck::checkMethod(['POST'], $method);
-        if (!$methodCheck['status']) {
-            // Method check failed, return error info.
-            return $methodCheck['message'];
-        }
+        $filename = $request->query->get('filename') ?? sha1(uniqid()) . '.jpg';
+        $filepath = $this->getParameter('medias_directory').'/'.$filename;
+        $contenturi = $request->getSchemeAndHttpHost() . "/medias/$filename";
 
-        $filename = $request->query->get('filename');
-        $host = $request->getHost();
+        $filesystem = new Filesystem();
+        $filesystem->dumpFile($filepath, file_get_contents("php://input"));
 
-        // We don't care about the payload and storing it.
-        // Just assume everything is fine and return a fake URI for it.
-        $contentURI = 'mxc://' . $host . '/' . substr(hash('sha256', ($serverID . $filename . $host)), 0, 24);
+        $medias = new Medias();
+        $medias->setContenturi($contenturi);
+        $medias->setServerid($serverID);
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($medias);
+        $entityManager->flush();
 
         return new JsonResponse((object) [
-            'content_uri' => $contentURI,
+            'encode' => $contenturi,
         ], 200);
     }
 }
