@@ -10,16 +10,16 @@ Run the following command to get your mock server up and running:
    ```
 
 ## API information
-All endpoints must be prefixed with a `serverID` to allow for parallel runs, for example if your Synapse server endpoint is:
+All endpoints must be prefixed with a `serverID` to allow for parallel runs, for example:
 
 ```
-https://synapse:8008/_synapse/admin/v2/users/@testuser:synapse
+http://localhost:8001/serverID/API
 ```
 
-The Mock Api endpoint would be:
+In addition to the standard endpoints, additional endpoints are provided for creating an Admin user:
 
 ```
-http://localhost:8001/someServerID/_synapse/admin/v2/users/@testuser:synapse
+/backoffice/createAdmin
 ```
 
 ## API coverage
