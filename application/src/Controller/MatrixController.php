@@ -90,7 +90,8 @@ class MatrixController extends AbstractController {
                     $response['refresh_token'] = $token->getRefreshToken();
                 }
                 $response['user_id'] = $user->getUserid();
-                $response['access_token'] = $token->getAccessToken();
+                $response['access_token'] = $token->getAccesstoken();
+                $response['refresh_token'] = $token->getRefreshtoken();
                 $response['home_server'] = $request->getHost();
 
                 return new JsonResponse((object) $response, 200);
