@@ -66,9 +66,12 @@ class MatrixController extends AbstractController {
 
             $entityManager = $this->getDoctrine()->getManager();
             $user = $entityManager->getRepository(Users::class)->findOneBy($check['loginidentifier']);
+
+            $passwordpatter = $user ? $user->getPasswordpattern() : null;
+            $userid = $user ? $user->getId() : null;
             $password = $entityManager->getRepository(Passwords::class)->findOneBy([
-                'password' => $this->hashPassword($payload->password, $user->getPasswordpattern())['token'],
-                'userid' => $user->getId()
+                'password' => $this->hashPassword($payload->password, $passwordpatter)['token'],
+                'userid' => $userid
             ]);
 
             // Check if user with its password is found.

@@ -47,6 +47,7 @@ class BackOfficeController extends AbstractController {
                 // New user, or existing user without any associated Tokens.
                 $token = new Tokens();
                 $token->setAccesstoken($this->generateToken('access-token'));
+                $token->setRefreshtoken($this->generateToken('refresh-token'));
                 $token->setExpiresinms();
                 $token->setServerid($serverID);
 

@@ -6,6 +6,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Entity\Rooms;
 use App\Entity\Roommembers;
 use App\Entity\Tokens;
+use App\Entity\Users;
 
 trait MatrixSynapseTrait {
 
@@ -146,7 +147,7 @@ trait MatrixSynapseTrait {
      * Get user token.
      *
      * @param string $serverID
-     * @param string $serverID
+     * @param string $refreshToken
      * @return object|null
      */
     private function getToken(string $serverID, string $refreshToken): ?object
@@ -155,6 +156,20 @@ trait MatrixSynapseTrait {
         return $entityManager->getRepository(Tokens::class)->findOneBy([
             'serverid' => $serverID,
             'refreshtoken' => $refreshToken
+        ]);
+    }
+
+    /**
+     * Get a user.
+     *
+     * @param string $userID
+     * @return object|null
+     */
+    private function getOneUser(string $userID): ?object
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        return $entityManager->getRepository(Users::class)->findOneBy([
+            'userid' => $userID
         ]);
     }
 
