@@ -24,7 +24,7 @@ class MediaController extends AbstractController {
     /**
      * @Route("", name="endpoint")
      */
-    public function endpoint(): JsonResponse
+    public function endpoint() : JsonResponse
     {
         return new JsonResponse((object) [
             'errcode' => 'M_UNRECOGNIZED',
@@ -40,7 +40,7 @@ class MediaController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    public function uploadMedia(string $serverID, Request $request): JsonResponse {
+    public function uploadMedia(string $serverID, Request $request) : JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['POST'], $request);

@@ -2,7 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\Externalids;
+use App\Entity\Medias;
 use App\Entity\Passwords;
+use App\Entity\Roommembers;
+use App\Entity\Rooms;
+use App\Entity\Threepids;
 use App\Entity\Tokens;
 use App\Entity\Users;
 use App\Traits\GeneralTrait;
@@ -21,12 +26,12 @@ class BackOfficeController extends AbstractController {
     /**
      * Create admin user.
      *
-     * @Route("/create-admin", name="createAdmin")
+     * @Route("/create-admin", name="backOfficeCreateAdmin")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
      */
-    public function createAdmin(string $serverID, Request $request) {
+    public function backOfficeCreateAdmin(string $serverID, Request $request) : JsonResponse {
         $method = $request->getMethod();
         if ($method === 'POST') {
             $entityManager = $this->getDoctrine()->getManager();
@@ -67,6 +72,7 @@ class BackOfficeController extends AbstractController {
                 // New user, or existing user without any associated Tokens.
                 $passwords = new Passwords();
                 $passwords->setPassword($password['token']);
+                $passwords->setServerid($serverID);
 
                 $user->addPasswords($passwords);
                 $user->setPasswordpattern($password['pattern']);
@@ -86,5 +92,37 @@ class BackOfficeController extends AbstractController {
                 403
             );
         }
+    }
+
+    /**
+     * @Route("/reset", name="backOfficeReset")
+     * @param string $serverID
+     * @return JsonResponse
+     */
+    public function backOfficeReset(string $serverID) : JsonResponse
+    {
+        $entities = [
+            Users::class,
+            Tokens::class,
+            Passwords::class,
+            Rooms::class,
+            Roommembers::class,
+            Threepids::class,
+            Externalids::class,
+            Medias::class
+        ];
+
+        $entityManager = $this->getDoctrine()->getManager();
+        foreach ($entities as $entityClass) {
+            $entities = $this->getDoctrine()
+                ->getRepository($entityClass)
+                ->findBy(['serverid' => $serverID]);
+            foreach ($entities as $entity) {
+                $entityManager->remove($entity);
+                $entityManager->flush();
+            }
+        }
+
+        return new JsonResponse((object) ['reset' => true]);
     }
 }

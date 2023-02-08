@@ -112,12 +112,11 @@ trait GeneralTrait {
     private function validateRequest(array $requested = [], array $checks = []): array {
         if (count($requested) > 0) {
             foreach ($checks as $check) {
-                // if (is_array($check))
                 if (!in_array($check, array_keys($requested))) {
                     $response['status'] = false;
                     $response['message'] = new JsonResponse((object) [
-                        'errcode' => 'M_BAD_JSON',
-                        'error' => '"'.$check. '" has not been added in the body'
+                        'errcode' => 'M_UNKNOWN',
+                        'error' => "'".$check."' not in content"
                     ], 403);
                     return $response;
                 }
@@ -125,8 +124,8 @@ trait GeneralTrait {
         } else {
             $response['status'] = false;
             $response['message'] = new JsonResponse((object) [
-                'errcode' => 'M_BAD_JSON',
-                'error' => '"'.implode(', ', $checks). '" has not been added in the body'
+                'errcode' => 'M_UNKNOWN',
+                'error' => "'".implode(', ', $checks)."' not in content"
             ], 403);
             return $response;
         }

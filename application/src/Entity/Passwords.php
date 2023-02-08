@@ -18,6 +18,11 @@ class Passwords
     private $id;
 
     /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $serverid;
+
+    /**
      * @ORM\ManyToOne(targetEntity=Users::class, inversedBy="passwords")
      * @ORM\JoinColumn(nullable=false)
      */
@@ -31,6 +36,18 @@ class Passwords
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getServerid(): ?string
+    {
+        return $this->serverid;
+    }
+
+    public function setServerid(string $serverid): self
+    {
+        $this->serverid = $serverid;
+
+        return $this;
     }
 
     public function getUserid(): ?Users

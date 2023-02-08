@@ -22,6 +22,11 @@ class Roommembers
     /**
      * @ORM\Column(type="string", length=255)
      */
+    private $serverid;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
     private $roomid;
 
     /**
@@ -52,6 +57,18 @@ class Roommembers
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getServerid(): ?string
+    {
+        return $this->serverid;
+    }
+
+    public function setServerid(string $serverid): self
+    {
+        $this->serverid = $serverid;
+
+        return $this;
     }
 
     public function getRoomid(): ?string
