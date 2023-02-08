@@ -22,6 +22,12 @@ In addition to the standard endpoints, additional endpoints are provided for cre
 /backoffice/createAdmin
 ```
 
+In addition, the following endpoint can be used to trigger a reset between tests:
+
+```
+/backoffice/reset
+```
+
 ## API coverage
 The following are the currently mocked API endpoints. These should respond with the same HTTP status code, content type and response content as a real Synapse server.
 
