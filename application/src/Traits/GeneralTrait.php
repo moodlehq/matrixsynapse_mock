@@ -15,14 +15,16 @@ trait GeneralTrait {
      * @param Request $request
      * @return array
      */
-    public function authHttpCheck(array $requestMethod, Request $request) : array {
+    public function authHttpCheck(array $requestMethod, Request $request, bool $doAuthChecking = true) : array {
         $apiCheck = new ApiCheck($this->getDoctrine()->getManager());
 
-        // Check call auth.
-        $authCheck = $apiCheck->checkAuth($request);
-        if (!$authCheck['status']) {
-            // Auth check failed, return error info.
-            return $authCheck;
+        if ($doAuthChecking) {
+            // Check call auth.
+            $authCheck = $apiCheck->checkAuth($request);
+            if (!$authCheck['status']) {
+                // Auth check failed, return error info.
+                return $authCheck;
+            }
         }
 
         // Check HTTP method is accepted.

@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Users;
 use App\Entity\Threepids;
 use App\Entity\Roommembers;
+use App\Entity\Rooms;
 use App\Entity\Tokens;
 use App\Traits\GeneralTrait;
 use App\Traits\MatrixSynapseTrait;
@@ -296,6 +297,44 @@ class SynapseController extends AbstractController {
 
         return new JsonResponse((object) [
             'room_id' => $roomID
+        ], 200);
+    }
+
+    /**
+     * Delete a room.
+     *
+     * @Route("/rooms/{roomID}", name="deleteRoom")
+     * @param string $serverID
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function deleteRoom(string $serverID, string $roomID, Request $request) : JsonResponse {
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck(['DELETE'], $request, false);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
+        }
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $roommembers = $this->getDoctrine()
+                ->getRepository(Roommembers::class)
+                ->findBy(['serverid' => $serverID, 'roomid' => $roomID]);
+        foreach ($roommembers as $entity) {
+            $entityManager->remove($entity);
+            $entityManager->flush();
+        }
+
+        $room = $this->getDoctrine()
+                ->getRepository(Rooms::class)
+                ->findBy(['roomid' => $roomID]);
+        if (!empty($room)) {
+            $entityManager->remove($room[0]);
+            $entityManager->flush();
+        }
+
+        return new JsonResponse((object) [
+            'delete_id' => substr(hash('sha256', (date("Ymdhms"))), 0, 18)
         ], 200);
     }
 }
