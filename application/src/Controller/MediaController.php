@@ -64,7 +64,7 @@ class MediaController extends AbstractController {
         $entityManager->flush();
 
         return new JsonResponse((object) [
-            'encode' => $contenturi,
+            'content_uri' => $contenturi,
         ], 200);
     }
 }
