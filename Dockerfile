@@ -1,7 +1,7 @@
 FROM php:8.0-apache-bullseye
 
-LABEL maintainer="Matt Porritt <matt.porritt@moodle.com>" \
-    org.opencontainers.image.source="https://github.com/mattporritt/matrixsynapse_mock"
+LABEL maintainer="Stevani Andolo <stevani.andolo@moodle.com>" \
+    org.opencontainers.image.source="https://github.com/stevandoMoodle/matrixsynapse_mock"
 
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
