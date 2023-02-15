@@ -245,7 +245,8 @@ class MatrixController extends AbstractController {
     /**
      * Update various room state components.
      *
-     * @Route("/rooms/{roomID}/state/{eventType}", name="roomState")
+     * @Route("/rooms/{roomID}/state/{eventType}")
+     * @Route("/rooms/{roomID}/state/{eventType}/")
      * @param string $serverID
      * @param string $eventType
      * @param Request $request
