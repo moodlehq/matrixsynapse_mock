@@ -43,14 +43,18 @@ class ApiCheck extends AbstractController {
             ], 401);
         } else {
             $authToken = substr($authHeader, 7);
-            if (!$this->isValidAuthToken($authToken)){
+            $check_token = $this->isValidAuthToken($authToken);
+            if (empty($check_token)){
                 // Auth token is not valid.
                 $response['status'] = false;
                 $response['message'] = new JsonResponse((object) [
                     'errcode' => 'M_UNKNOWN_TOKEN',
                     'error' => 'Invalid access token passed.'
                 ], 401);
+            } else {
+                $response['user_id'] = $check_token->getUserid()->getUserid();
             }
+
         }
         return $response;
     }
@@ -59,12 +63,11 @@ class ApiCheck extends AbstractController {
      * Check if supplied auth token is valid.
      *
      * @param string $authToken
-     * @return bool
+     * @return object
      */
-    private function isValidAuthToken(string $authToken): bool
+    private function isValidAuthToken(string $authToken): ?object
     {
-        $check = $this->entityManger->getRepository(Tokens::class)->findOneBy(['accesstoken' => $authToken]);
-        return !empty($check);
+        return $this->entityManger->getRepository(Tokens::class)->findOneBy(['accesstoken' => $authToken]);
     }
 
     /**

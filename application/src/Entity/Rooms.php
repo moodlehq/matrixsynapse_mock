@@ -45,6 +45,16 @@ class Rooms
      */
     private $avatar;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $roomalias;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $creator;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -106,6 +116,30 @@ class Rooms
     public function setAvatar(?string $avatar): self
     {
         $this->avatar = $avatar;
+
+        return $this;
+    }
+
+    public function getRoomAlias(): ?string
+    {
+        return $this->roomalias;
+    }
+
+    public function setRoomAlias(?string $roomalias): self
+    {
+        $this->roomalias = $roomalias;
+
+        return $this;
+    }
+
+    public function getCreator(): ?string
+    {
+        return $this->creator;
+    }
+
+    public function setCreator(?string $creator): self
+    {
+        $this->creator = $creator;
 
         return $this;
     }

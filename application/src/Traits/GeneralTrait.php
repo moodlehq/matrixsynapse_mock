@@ -25,6 +25,7 @@ trait GeneralTrait {
                 // Auth check failed, return error info.
                 return $authCheck;
             }
+            $response['user_id'] = $authCheck['user_id'];
         }
 
         // Check HTTP method is accepted.
@@ -35,7 +36,8 @@ trait GeneralTrait {
             return $methodCheck;
         }
 
-        return ['status' => true];
+        $response['status'] = true;
+        return $response;
     }
 
     /**

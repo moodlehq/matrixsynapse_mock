@@ -168,27 +168,40 @@ class MatrixController extends AbstractController {
         }
 
         $payload = json_decode($request->getContent());
-        $roomName = $payload->name;
+        $roomName = $payload->name ?? rand();
         $host = $request->getHost();
 
         // Create a mock room ID. This isn't the way Synapse does it (I think), but it's a good enough approximation.
         $roomID = '!'. substr(hash('sha256', ($serverID . $roomName . (string)time())), 0, 18) . ':' . $host;
+        $response['room_id'] = $roomID;
 
         // Store the room in the DB.
         $entityManager = $this->getDoctrine()->getManager();
         $room = new Rooms();
 
         $room->setRoomid($roomID);
-        $room->setName($payload->name);
-        $room->setTopic($payload->topic);
+        $room->setName($roomName);
+        $room->setTopic($payload->topic ?? null);
         $room->setServerid($serverID);
+        $room->setCreator($accessCheck['user_id']);
+        if (isset($payload->room_alias_name) && !empty($payload->room_alias_name)) {
+            $room_alias = "#{$payload->room_alias_name}:{$host}";
+            $check_alias = $entityManager->getRepository(Rooms::class)->findOneBy(['roomalias' => $room_alias]);
+            if (empty($check_alias)) {
+                $room->setRoomAlias($room_alias);
+                $response['room_alias'] = $room_alias;
+            } else {
+                return new JsonResponse((object) [
+                    'errcode' => 'M_ROOM_IN_USE',
+                    'error' => 'Room alias already taken'
+                ], 400);
+            }
+        }
 
         $entityManager->persist($room);
         $entityManager->flush();
 
-        return new JsonResponse((object) [
-            'room_id' => $roomID,
-        ], 200);
+        return new JsonResponse((object) $response, 200);
     }
 
     /**

@@ -303,7 +303,7 @@ class SynapseController extends AbstractController {
     /**
      * Delete a room.
      *
-     * @Route("/rooms/{roomID}", name="deleteRoom")
+     * @Route("/rooms/{roomID}", methods={"DELETE"}, name="deleteRoom")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
@@ -335,6 +335,50 @@ class SynapseController extends AbstractController {
 
         return new JsonResponse((object) [
             'delete_id' => substr(hash('sha256', (date("Ymdhms"))), 0, 18)
+        ], 200);
+    }
+
+    /**
+     * Get a room detail.
+     *
+     * @Route("/rooms/{roomID}", methods={"GET"}, name="roomInfo")
+     * @param string $serverID
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function roomInfo(string $serverID, string $roomID, Request $request) : JsonResponse {
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck(['GET'], $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
+        }
+
+        // Check if room exists.
+        $check = $this->roomExists($roomID, true);
+        if (!$check['status']) {
+            return $check['message'];
+        }
+        $room = $check['room'];
+
+        // Get all joined members.
+        $room_members = $this->getDoctrine()
+            ->getRepository(Roommembers::class)
+            ->findBy(['roomid' => $roomID, 'serverid' => $serverID]);
+        if (!empty($room_members)) {
+            $room_members = count((array)$room_members);
+        } else {
+            $room_members = 0;
+        }
+
+        return new JsonResponse((object) [
+            'room_id' => $room->getRoomid(),
+            'name' => $room->getName(),
+            'canonical_alias' => $room->getRoomAlias(),
+            'joined_members' => $room_members,
+            'creator' => $room->getCreator(),
+            'avatar' => $room->getAvatar(),
+            'topic' => $room->getTopic()
         ], 200);
     }
 }
