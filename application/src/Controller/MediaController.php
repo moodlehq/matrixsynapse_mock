@@ -35,7 +35,8 @@ class MediaController extends AbstractController {
     /**
      * Create Matrix room.
      *
-     * @Route("/upload", name="uploadMedia")
+     * @Route("/upload")
+     * @Route("/upload/")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
