@@ -18,14 +18,14 @@ use App\Traits\MatrixSynapseTrait;
 /**
  * API Controller to serve a mock of the Synapse API.
  *
- * @Route("/{serverID}/_synapse/admin/v2")
+ * @Route("/{serverID}/_synapse/admin")
  */
 class SynapseController extends AbstractController {
 
     use GeneralTrait, MatrixSynapseTrait;
 
     /**
-     * @Route("", name="endpoint")
+     * @Route("/v2", name="endpoint")
      */
     public function endpoint() : JsonResponse
     {
@@ -38,7 +38,7 @@ class SynapseController extends AbstractController {
     /**
      * Handle Synapse user registration.
      *
-     * @Route("/users/{userID}", name="registerUser")
+     * @Route("/v2/users/{userID}", name="registerUser")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
@@ -244,7 +244,7 @@ class SynapseController extends AbstractController {
     /**
      * Invite user into a room.
      *
-     * @Route("/join/{roomID}", name="inviteUser")
+     * @Route("/v2/join/{roomID}", name="inviteUser")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
@@ -303,7 +303,7 @@ class SynapseController extends AbstractController {
     /**
      * Delete a room.
      *
-     * @Route("/rooms/{roomID}", methods={"DELETE"}, name="deleteRoom")
+     * @Route("/v2/rooms/{roomID}", methods={"DELETE"}, name="deleteRoom")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
@@ -341,7 +341,7 @@ class SynapseController extends AbstractController {
     /**
      * Get a room detail.
      *
-     * @Route("/rooms/{roomID}", methods={"GET"}, name="roomInfo")
+     * @Route("/v1/rooms/{roomID}", methods={"GET"}, name="roomInfo")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
