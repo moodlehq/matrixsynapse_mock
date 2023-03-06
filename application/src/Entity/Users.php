@@ -64,6 +64,11 @@ class Users
      */
     private $passwords;
 
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $avatarurl;
+
     public function __construct()
     {
         $this->threepids = new ArrayCollection();
@@ -163,6 +168,18 @@ class Users
     public function setPasswordpattern(string $passwordpattern = null): self
     {
         $this->passwordpattern = $passwordpattern;
+
+        return $this;
+    }
+
+    public function getAvatarurl(): ?string
+    {
+        return $this->avatarurl;
+    }
+
+    public function setAvatarurl(string $avatarurl = null): self
+    {
+        $this->avatarurl = $avatarurl;
 
         return $this;
     }

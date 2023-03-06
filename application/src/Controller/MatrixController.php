@@ -9,6 +9,7 @@ use App\Entity\Tokens;
 use App\Entity\Users;
 use App\Traits\GeneralTrait;
 use App\Traits\MatrixSynapseTrait;
+use stdClass;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -17,14 +18,14 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * API Controller to serve a mock of the Matrix API.
  *
- * @Route("/{serverID}/_matrix/client/r0")
+ * @Route("/{serverID}/_matrix/client")
  */
 class MatrixController extends AbstractController {
 
     use GeneralTrait, MatrixSynapseTrait;
 
     /**
-     * @Route("", name="endpoint")
+     * @Route("/r0", name="endpoint")
      */
     public function endpoint(): JsonResponse
     {
@@ -37,7 +38,7 @@ class MatrixController extends AbstractController {
     /**
      * Login a user.
      *
-     * @Route("/login", name="login")
+     * @Route("/r0/login", name="login")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
@@ -117,7 +118,7 @@ class MatrixController extends AbstractController {
     /**
      * Refresh the tokens.
      *
-     * @Route("/refresh", name="refresh")
+     * @Route("/r0/refresh", name="refresh")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
@@ -154,7 +155,7 @@ class MatrixController extends AbstractController {
     /**
      * Create Matrix room.
      *
-     * @Route("/createRoom", name="createRoom")
+     * @Route("/r0/createRoom", name="createRoom")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
@@ -207,7 +208,7 @@ class MatrixController extends AbstractController {
     /**
      * Create Matrix room.
      *
-     * @Route("/rooms/{roomID}/kick", name="kick")
+     * @Route("/r0/rooms/{roomID}/kick", name="kick")
      * @param Request $request
      * @return JsonResponse
      */
@@ -245,8 +246,8 @@ class MatrixController extends AbstractController {
     /**
      * Update various room state components.
      *
-     * @Route("/rooms/{roomID}/state/{eventType}")
-     * @Route("/rooms/{roomID}/state/{eventType}/")
+     * @Route("/r0/rooms/{roomID}/state/{eventType}")
+     * @Route("/r0/rooms/{roomID}/state/{eventType}/")
      * @param string $serverID
      * @param string $eventType
      * @param Request $request
@@ -312,65 +313,43 @@ class MatrixController extends AbstractController {
     }
 
     /**
-     * Invite user into a room.
+     * Gets all joined members of a group.
      *
-     * @Route("/rooms/{roomID}/invite", name="inviteUser")
+     * @Route("/r0/rooms/{roomID}/joined_members", name="getJoinedMembers")
      * @param string $serverID
+     * @param string $roomID
      * @param Request $request
      * @return JsonResponse
      */
-    public function inviteUser(string $serverID, string $roomID, Request $request) : JsonResponse {
+    public function getJoinedMembers(string $serverID, string $roomID, Request $request) : JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
-        $accessCheck = $this->authHttpCheck(['POST'], $request);
+        $accessCheck = $this->authHttpCheck(['GET'], $request);
         if (!$accessCheck['status']) {
             return $accessCheck['message'];
         }
 
-        // Check if room exists.
-        $this->roomExists($roomID);
+        // Get all joined members.
+        $room_members = $this->getDoctrine()
+            ->getRepository(Roommembers::class)
+            ->findBy(['roomid' => $roomID, 'serverid' => $serverID]);
 
-        $payload = json_decode($request->getContent());
-        $userID = $payload->userid;
+        $joined_members = new stdClass();
+        foreach ($room_members as $member) {
+            $userid = $member->getUserid();
 
-        // Check if the user has already been invited.
-        $check = $this->isUserInvited($roomID, $userID);
-        if (!$check['status']) {
-            return $check['message'];
+            $user = $this->getDoctrine()
+                ->getRepository(Users::class)
+                ->findBy(['userid' => $userid, 'serverid' => $serverID])[0];
+
+            $userdetail = new stdClass();
+            $userdetail->avatar_url = $user->getAvatarurl();
+            $userdetail->display_name = $user->getDisplayname();
+            $joined_members->{$userid} = $userdetail;
         }
-
-        // Check if the user is banned from the group.
-        $check = $this->isUserBanned($roomID, $userID);
-        if (!$check['status']) {
-            return $check['message'];
-        }
-
-        // Check if "currentuserid" is sent with the body.
-        if (!isset($payload->currentuserid)) {
-            return new JsonResponse((object) [
-                'errcode' => 'M_BAD_JSON',
-                'message' => '"currentuserid" has not been sent as part of the body'
-            ], 400);
-        }
-
-        // Check if the inviter is a member of the group.
-        $this->validateRoomInviter($roomID, $payload->currentuserid);
-
-        // Store the room member in the DB.
-        $entityManager = $this->getDoctrine()->getManager();
-        $roomMember = new Roommembers();
-
-        $roomMember->setRoomid($roomID);
-        $roomMember->setReason($payload->reason);
-        $roomMember->setUserid($userID);
-        $roomMember->setAccepted();
-        $roomMember->setServerid($serverID);
-
-        $entityManager->persist($roomMember);
-        $entityManager->flush();
 
         return new JsonResponse((object) [
-            'message' => 'The user has been invited to join the room'
+            'joined' => $joined_members
         ], 200);
     }
 }

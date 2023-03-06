@@ -244,7 +244,7 @@ class SynapseController extends AbstractController {
     /**
      * Invite user into a room.
      *
-     * @Route("/v2/join/{roomID}", name="inviteUser")
+     * @Route("/v1/join/{roomID}", name="inviteUser")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
