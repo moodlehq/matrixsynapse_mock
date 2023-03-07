@@ -220,7 +220,7 @@ class MatrixController extends AbstractController {
         }
 
         $payload = json_decode($request->getContent());
-        $check = $this->validateRequest((array)$payload, ['reason', 'user_id']);
+        $check = $this->validateRequest((array)$payload, ['user_id']);
         if (!$check['status']) {
             return $check['message'];
         }
