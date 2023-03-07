@@ -235,7 +235,7 @@ class MatrixController extends AbstractController {
 
         // Update th membership.
         $roommembers->setState('leave');
-        $roommembers->setReason($payload->reason);
+        $roommembers->setReason($payload->reason ?? null);
 
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->persist($roommembers);
@@ -332,7 +332,7 @@ class MatrixController extends AbstractController {
         // Get all joined members.
         $room_members = $this->getDoctrine()
             ->getRepository(Roommembers::class)
-            ->findBy(['roomid' => $roomID, 'serverid' => $serverID]);
+            ->findBy(['roomid' => $roomID, 'serverid' => $serverID, 'state' => null]);
 
         $joined_members = new stdClass();
         foreach ($room_members as $member) {

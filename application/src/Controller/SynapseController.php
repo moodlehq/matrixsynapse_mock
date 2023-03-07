@@ -364,7 +364,7 @@ class SynapseController extends AbstractController {
         // Get all joined members.
         $room_members = $this->getDoctrine()
             ->getRepository(Roommembers::class)
-            ->findBy(['roomid' => $roomID, 'serverid' => $serverID]);
+            ->findBy(['roomid' => $roomID, 'serverid' => $serverID, 'state' => null]);
         if (!empty($room_members)) {
             $room_members = count((array)$room_members);
         } else {
