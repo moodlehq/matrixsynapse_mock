@@ -17,12 +17,14 @@ http://localhost:8001/serverID/API
 ```
 
 In addition to the standard endpoints, additional endpoints are provided for creating an Admin user:
+Expected method is (POST)
 
 ```
 /backoffice/create-admin
 ```
 
 In addition, the following endpoint can be used to trigger a reset between tests:
+Expected method is (POST)
 
 ```
 /backoffice/reset

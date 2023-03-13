@@ -87,10 +87,10 @@ class BackOfficeController extends AbstractController {
                 'password' => 'password'
             ], 200);
         } else {
-            return new JsonResponse(
-                'Only POST method is allowed.',
-                403
-            );
+            return new JsonResponse((object)[
+                'errcode' => 'M_UNRECOGNIZED',
+                'error' => 'Unrecognized request'
+            ], 403 );
         }
     }
 
