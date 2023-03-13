@@ -44,6 +44,12 @@ class MatrixController extends AbstractController {
      * @return JsonResponse
      */
     public function login(string $serverID, Request $request) : JsonResponse {
+        // 1. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck(['POST'], $request, false);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
+        }
+
         $payload = json_decode($request->getContent());
         $check = $this->validateRequest((array)$payload, ['identifier', 'type']);
         if (!$check['status']) {
@@ -124,6 +130,12 @@ class MatrixController extends AbstractController {
      * @return JsonResponse
      */
     public function refresh(string $serverID, Request $request) : JsonResponse {
+        // 1. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck(['POST'], $request, false);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
+        }
+
         $payload = json_decode($request->getContent());
         $check = $this->validateRequest((array)$payload, ['refresh_token']);
         if (!$check['status']) {
@@ -213,6 +225,13 @@ class MatrixController extends AbstractController {
      * @return JsonResponse
      */
     public function kick(string $roomID, Request $request) : JsonResponse {
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck(['POST'], $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
+        }
+
         // Check room exists.
         $roomCheck = $this->roomExists($roomID);
         if (!$roomCheck['status']) {

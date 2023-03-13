@@ -19,7 +19,7 @@ http://localhost:8001/serverID/API
 In addition to the standard endpoints, additional endpoints are provided for creating an Admin user:
 
 ```
-/backoffice/createAdmin
+/backoffice/create-admin
 ```
 
 In addition, the following endpoint can be used to trigger a reset between tests:
@@ -27,6 +27,46 @@ In addition, the following endpoint can be used to trigger a reset between tests
 ```
 /backoffice/reset
 ```
+
+Back office request example:
+```
+curl -i GET http://elementmock:8001/serverID/backoffice/create-admin
+```
+Error response example
+```
+{
+    "errcode" : "M_UNRECOGNIZED",
+    "error" : "Unrecognized request"
+}
+```
+
+## API Documentations
+### Synapse API documentation:
+```
+https://matrix-org.github.io/synapse/latest/usage/administration/admin_api/index.html
+```
+
+### Synapse-Mock API functions
+* Register new user: expected method (PUT)
+* Update existing user: expected method (PUT)
+* Get user info: expected method (GET)
+* Add user to matrix room: expected method (POST)
+* Delete existing matrix room: expected method (DELETE)
+* Get room info: expected method (GET)
+
+### Matrix API documentation:
+```
+https://spec.matrix.org/v1.5/client-server-api/
+```
+
+### Matrix-Mock API functions
+* Login: expected method (POST)
+* Refresh token: expected method (POST)
+* Create matrix room: expected method (POST)
+* Remove user from room: expected method (POST)
+* Room manipulations (Update room topic, name and avatar): expected method (PUT)
+* Get members of existing room: expected method (GET)
+* Upload media: expected method (POST)
 
 ## API coverage
 The following are the currently mocked API endpoints. These should respond with the same HTTP status code, content type and response content as a real Synapse server.
@@ -56,12 +96,12 @@ http://localhost:8001/someServerID/_synapse/admin/v2/users/@anewuser:synapse
 ```
 
 ## Automated tests
-You need to define `TEST_MOD_SYNAPSE_MOCK_SERVER` in your config.php when running automated tests like PHPUnit and Behat.
+You need to define `TEST_COMMUNICATION_MATRIX_MOCK_SERVER` in your config.php when running automated tests like PHPUnit and Behat.
 Otherwise, most of the Matrix tests will be marked skipped.
 
 For example, add the following to your config.php after the `$CFG->wwwroot` line:
    ```
-   define('TEST_MOD_SYNAPSE_MOCK_SERVER', "http://localhost:8001/hash" . sha1($CFG->wwwroot));
+   define('TEST_COMMUNICATION_MATRIX_MOCK_SERVER', "http://localhost:8001/hash" . sha1($CFG->wwwroot));
    ```
 
 ## Local development
