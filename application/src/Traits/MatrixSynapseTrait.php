@@ -75,7 +75,7 @@ trait MatrixSynapseTrait {
     private function getRoomMember(string $roomID, string $userID): ?object
     {
         $entityManager = $this->getDoctrine()->getManager();
-        return $entityManager->getRepository(Roommembers::class)->findOneBy(['roomid' => $roomID, 'userid' => $userID]);
+        return $entityManager->getRepository(Roommembers::class)->findOneBy(['roomid' => $roomID, 'userid' => $userID, 'state' => null]);
     }
 
     /**
