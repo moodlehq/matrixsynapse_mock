@@ -97,7 +97,7 @@ class MatrixController extends AbstractController {
                     $response['refresh_token'] = $token->getRefreshToken();
                 }
 
-                $token->setAccessToken($this->generateToken('access-token'));
+                $token->setAccessToken($this->generateToken());
                 $entityManager->persist($token);
                 $entityManager->flush();
 

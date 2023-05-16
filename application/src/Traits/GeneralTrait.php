@@ -2,8 +2,9 @@
 
 namespace App\Traits;
 
-use Symfony\Component\HttpFoundation\Request;
 use App\Service\ApiCheck;
+use Ramsey\Uuid\Uuid;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 trait GeneralTrait {
@@ -43,21 +44,10 @@ trait GeneralTrait {
     /**
      * Generates a unique token.
      *
-     * @param string $extra
      * @return string
      */
-    private function generateToken(string $extra = null): string {
-        $string = hash('sha256', $extra.date("Ymdhms"));
-        $token = null;
-        $previousPosition = 0;
-        for ($i = 0; $i < strlen($string); $i++) {
-            $randomDashedPosition = (int)rand(1, 10);
-            if (($randomDashedPosition > 3) && (($i % $randomDashedPosition) === 0)) {
-                $previousPosition = (int)($previousPosition + $randomDashedPosition);
-                $token = substr_replace($token ?? $string, '-', $previousPosition, 1);
-            }
-        }
-        return $token;
+    private function generateToken(): string {
+        return Uuid::uuid4()->toString();
     }
 
     /**
