@@ -310,6 +310,12 @@ class MatrixController extends AbstractController {
                 return $check['message'];
             }
             $room->setAvatar($payload->url);
+        } elseif ($eventType == 'm.room.power_levels') {
+            // Room power level api call validation to check if the users are passed in the payload to update the power level.
+            $check = $this->validateRequest((array)$payload, ['users']);
+            if (!$check['status']) {
+                return $check['message'];
+            }
         } else {
             // Unknown state.
             return new JsonResponse((object) [
