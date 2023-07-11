@@ -21,11 +21,65 @@ use Symfony\Component\HttpFoundation\Request;
  * @Route("/{serverID}/_matrix/client")
  */
 class MatrixController extends AbstractController {
+    use GeneralTrait;
+    use MatrixSynapseTrait;
 
-    use GeneralTrait, MatrixSynapseTrait;
+    /**
+     * @Route("/versions", name="versions")
+     */
+    public function versions(): JsonResponse
+    {
+        return new JsonResponse((object) [
+            "versions" => [
+                "r0.0.1",
+                "r0.1.0",
+                "r0.2.0",
+                "r0.3.0",
+                "r0.4.0",
+                "r0.5.0",
+                "r0.6.0",
+                "r0.6.1",
+                "v1.1",
+                "v1.2",
+                "v1.3",
+                "v1.4",
+                "v1.5",
+                "v1.6",
+            ],
+            "unstable_features"=> [
+                "org.matrix.label_based_filtering" => true,
+                "org.matrix.e2e_cross_signing" => true,
+                "org.matrix.msc2432" => true,
+                "uk.half-shot.msc2666.query_mutual_rooms" => true,
+                "io.element.e2ee_forced.public" => false,
+                "io.element.e2ee_forced.private" => false,
+                "io.element.e2ee_forced.trusted_private" => false,
+                "org.matrix.msc3026.busy_presence" => false,
+                "org.matrix.msc2285.stable" => true,
+                "org.matrix.msc3827.stable" => true,
+                "org.matrix.msc2716" => false,
+                "org.matrix.msc3440.stable" => true,
+                "org.matrix.msc3771" => true,
+                "org.matrix.msc3773" => false,
+                "fi.mau.msc2815" => false,
+                "fi.mau.msc2659.stable" => true,
+                "org.matrix.msc3882" => false,
+                "org.matrix.msc3881" => false,
+                "org.matrix.msc3874" => false,
+                "org.matrix.msc3886" => false,
+                "org.matrix.msc3912" => false,
+                "org.matrix.msc3952_intentional_mentions" => false,
+                "org.matrix.msc3981" => false,
+                "org.matrix.msc3391" => false,
+            ]
+        ]);
+    }
 
     /**
      * @Route("/r0", name="endpoint")
+     * @Route("/v1", name="endpoint")
+     * @Route("/v2", name="endpoint")
+     * @Route("/v3", name="endpoint")
      */
     public function endpoint(): JsonResponse
     {
@@ -43,7 +97,7 @@ class MatrixController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    public function login(string $serverID, Request $request) : JsonResponse {
+    public function login(string $serverID, Request $request): JsonResponse {
         // 1. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['POST'], $request, false);
         if (!$accessCheck['status']) {
@@ -129,7 +183,7 @@ class MatrixController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    public function refresh(string $serverID, Request $request) : JsonResponse {
+    public function refresh(string $serverID, Request $request):JsonResponse {
         // 1. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['POST'], $request, false);
         if (!$accessCheck['status']) {
@@ -168,11 +222,12 @@ class MatrixController extends AbstractController {
      * Create Matrix room.
      *
      * @Route("/r0/createRoom", name="createRoom")
+     * @Route("/v3/createRoom", name="createRoom")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
      */
-    public function createRoom(string $serverID, Request $request) : JsonResponse {
+    public function createRoom(string $serverID, Request $request):JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['POST'], $request);
@@ -221,10 +276,11 @@ class MatrixController extends AbstractController {
      * Create Matrix room.
      *
      * @Route("/r0/rooms/{roomID}/kick", name="kick")
+     * @Route("/v3/rooms/{roomID}/kick", name="kick")
      * @param Request $request
      * @return JsonResponse
      */
-    public function kick(string $roomID, Request $request) : JsonResponse {
+    public function kick(string $roomID, Request $request):JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['POST'], $request);
@@ -267,12 +323,14 @@ class MatrixController extends AbstractController {
      *
      * @Route("/r0/rooms/{roomID}/state/{eventType}")
      * @Route("/r0/rooms/{roomID}/state/{eventType}/")
+     * @Route("/v3/rooms/{roomID}/state/{eventType}")
+     * @Route("/v3/rooms/{roomID}/state/{eventType}/")
      * @param string $serverID
      * @param string $eventType
      * @param Request $request
      * @return JsonResponse
      */
-    public function roomState(string $serverID, string $roomID, string $eventType, Request $request) : JsonResponse {
+    public function roomState(string $serverID, string $roomID, string $eventType, Request $request):JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['PUT'], $request);
@@ -335,12 +393,13 @@ class MatrixController extends AbstractController {
      * Gets all joined members of a group.
      *
      * @Route("/r0/rooms/{roomID}/joined_members", name="getJoinedMembers")
+     * @Route("/v3/rooms/{roomID}/joined_members", name="getJoinedMembers")
      * @param string $serverID
      * @param string $roomID
      * @param Request $request
      * @return JsonResponse
      */
-    public function getJoinedMembers(string $serverID, string $roomID, Request $request) : JsonResponse {
+    public function getJoinedMembers(string $serverID, string $roomID, Request $request):JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['GET'], $request);

@@ -27,7 +27,7 @@ class SynapseController extends AbstractController {
     /**
      * @Route("/v2", name="endpoint")
      */
-    public function endpoint() : JsonResponse
+    public function endpoint(): JsonResponse
     {
         return new JsonResponse((object) [
             'errcode' => 'M_UNRECOGNIZED',
@@ -43,7 +43,7 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    public function registerUser(string $serverID, string $userID, Request $request) : JsonResponse
+    public function registerUser(string $serverID, string $userID, Request $request): JsonResponse
     {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
@@ -105,7 +105,7 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    private function createUser(string $serverID, string $userID, Request $request) : JsonResponse
+    private function createUser(string $serverID, string $userID, Request $request): JsonResponse
     {
         $user = new Users();
         return $this->upsertUser($serverID, $userID, $request, $user);
@@ -119,7 +119,7 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    private function updateUser(string $serverID, string $userID, Request $request, Users $user) : JsonResponse
+    private function updateUser(string $serverID, string $userID, Request $request, Users $user): JsonResponse
     {
         return $this->upsertUser($serverID, $userID, $request, $user, 200);
     }
@@ -133,7 +133,7 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    private function upsertUser(string $serverID, string $userID, Request $request, Users $user, int $status = 201) : JsonResponse
+    private function upsertUser(string $serverID, string $userID, Request $request, Users $user, int $status = 201): JsonResponse
     {
         $payload = json_decode($request->getContent());
         $entityManager = $this->getDoctrine()->getManager();
@@ -249,7 +249,7 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    public function inviteUser(string $serverID, string $roomID, Request $request) : JsonResponse {
+    public function inviteUser(string $serverID, string $roomID, Request $request): JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['POST'], $request);
@@ -308,7 +308,7 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    public function deleteRoom(string $serverID, string $roomID, Request $request) : JsonResponse {
+    public function deleteRoom(string $serverID, string $roomID, Request $request): JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['DELETE'], $request, false);
@@ -346,7 +346,7 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    public function roomInfo(string $serverID, string $roomID, Request $request) : JsonResponse {
+    public function roomInfo(string $serverID, string $roomID, Request $request): JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['GET'], $request);

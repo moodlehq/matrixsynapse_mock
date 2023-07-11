@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\File\File;
 /**
  * API Controller to serve a mock of the Matrix API for media requests.
  *
- * @Route("/{serverID}/_matrix/media/r0")
+ * @Route("/{serverID}/_matrix/media")
  */
 class MediaController extends AbstractController {
 
@@ -35,8 +35,10 @@ class MediaController extends AbstractController {
     /**
      * Create Matrix room.
      *
-     * @Route("/upload")
-     * @Route("/upload/")
+     * @Route("/r0/upload")
+     * @Route("/r0/upload/")
+     * @Route("/v3/upload")
+     * @Route("/v3/upload/")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
