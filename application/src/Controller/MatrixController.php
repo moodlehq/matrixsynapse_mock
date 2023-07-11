@@ -368,6 +368,12 @@ class MatrixController extends AbstractController {
                 return $check['message'];
             }
             $room->setAvatar($payload->url);
+        } elseif ($eventType == 'm.room.power_levels') {
+            // Update room avatar.
+            $check = $this->validateRequest((array)$payload, ['users']);
+            if (!$check['status']) {
+                return $check['message'];
+            }
         } else {
             // Unknown state.
             return new JsonResponse((object) [
