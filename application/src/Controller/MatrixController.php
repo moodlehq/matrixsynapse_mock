@@ -76,10 +76,10 @@ class MatrixController extends AbstractController {
     }
 
     /**
-     * @Route("/r0", name="endpoint")
-     * @Route("/v1", name="endpoint")
-     * @Route("/v2", name="endpoint")
-     * @Route("/v3", name="endpoint")
+     * @Route("/r0")
+     * @Route("/v1")
+     * @Route("/v2")
+     * @Route("/v3")
      */
     public function endpoint(): JsonResponse
     {
@@ -221,8 +221,8 @@ class MatrixController extends AbstractController {
     /**
      * Create Matrix room.
      *
-     * @Route("/r0/createRoom", name="createRoom")
-     * @Route("/v3/createRoom", name="createRoom")
+     * @Route("/r0/createRoom")
+     * @Route("/v3/createRoom")
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
@@ -275,8 +275,8 @@ class MatrixController extends AbstractController {
     /**
      * Create Matrix room.
      *
-     * @Route("/r0/rooms/{roomID}/kick", name="kick")
-     * @Route("/v3/rooms/{roomID}/kick", name="kick")
+     * @Route("/r0/rooms/{roomID}/kick")
+     * @Route("/v3/rooms/{roomID}/kick")
      * @param Request $request
      * @return JsonResponse
      */
@@ -333,6 +333,7 @@ class MatrixController extends AbstractController {
     public function roomState(string $serverID, string $roomID, string $eventType, Request $request):JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
+
         $accessCheck = $this->authHttpCheck(['PUT'], $request);
         if (!$accessCheck['status']) {
             return $accessCheck['message'];
@@ -392,8 +393,8 @@ class MatrixController extends AbstractController {
     /**
      * Gets all joined members of a group.
      *
-     * @Route("/r0/rooms/{roomID}/joined_members", name="getJoinedMembers")
-     * @Route("/v3/rooms/{roomID}/joined_members", name="getJoinedMembers")
+     * @Route("/r0/rooms/{roomID}/joined_members")
+     * @Route("/v3/rooms/{roomID}/joined_members")
      * @param string $serverID
      * @param string $roomID
      * @param Request $request
