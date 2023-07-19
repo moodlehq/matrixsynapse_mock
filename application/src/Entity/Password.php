@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\PasswordsRepository;
+use App\Repository\PasswordRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=PasswordsRepository::class)
+ * @ORM\Entity(repositoryClass=PasswordRepository::class)
  */
-class Passwords
+class Password
 {
     /**
      * @ORM\Id

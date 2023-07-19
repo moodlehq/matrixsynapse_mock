@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\Passwords;
+use App\Entity\Password;
 use App\Entity\Rooms;
 use App\Entity\RoomMember;
 use App\Entity\Tokens;
@@ -130,7 +130,7 @@ class MatrixController extends AbstractController {
 
             $passwordpatter = $user ? $user->getPasswordpattern() : null;
             $userid = $user ? $user->getId() : null;
-            $password = $entityManager->getRepository(Passwords::class)->findOneBy([
+            $password = $entityManager->getRepository(Password::class)->findOneBy([
                 'password' => $this->hashPassword($payload->password, $passwordpatter)['token'],
                 'userid' => $userid
             ]);

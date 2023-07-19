@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Externalids;
 use App\Entity\Medias;
-use App\Entity\Passwords;
+use App\Entity\Password;
 use App\Entity\RoomMember;
 use App\Entity\Rooms;
 use App\Entity\Threepids;
@@ -62,22 +62,22 @@ class BackOfficeController extends AbstractController {
             }
 
             // Process password.
-            $passwords = $entityManager->getRepository(Passwords::class)
+            $password = $entityManager->getRepository(Password::class)
                     ->findOneBy(['userid' => $user->getId()]);
-            if (!$passwords) {
+            if (!$password) {
                 // 1. Generates and returns token as password.
                 // 2. Generates and returns token pattern.
-                $password = $this->hashPassword('password', null, true);
+                $newpassword = $this->hashPassword('password', null, true);
 
                 // New user, or existing user without any associated Tokens.
-                $passwords = new Passwords();
-                $passwords->setPassword($password['token']);
-                $passwords->setServerid($serverID);
+                $password = new Password();
+                $password->setPassword($newpassword['token']);
+                $password->setServerid($serverID);
 
-                $user->addPasswords($passwords);
-                $user->setPasswordpattern($password['pattern']);
-                $passwords->setUserid($user);
-                $entityManager->persist($passwords);
+                $user->addPassword($password);
+                $user->setPasswordpattern($newpassword['pattern']);
+                $password->setUserid($user);
+                $entityManager->persist($password);
             }
             $entityManager->persist($user);
             $entityManager->flush();

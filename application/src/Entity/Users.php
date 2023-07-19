@@ -60,7 +60,7 @@ class Users
     private $tokens;
 
     /**
-     * @ORM\OneToMany(targetEntity=Passwords::class, mappedBy="userid", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=Password::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $passwords;
 
@@ -252,14 +252,14 @@ class Users
     }
 
     /**
-     * @return Collection<Passwords>
+     * @return Collection<Password>
      */
     public function getPasswords(): Collection
     {
         return $this->passwords;
     }
 
-    public function addPasswords(Passwords $password): self
+    public function addPassword(Password $password): self
     {
         $password->setUserid($this);
         $this->passwords->add($password);
