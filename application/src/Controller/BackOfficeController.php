@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\ExternalId;
-use App\Entity\Medias;
+use App\Entity\Media;
 use App\Entity\Password;
 use App\Entity\RoomMember;
 use App\Entity\Room;
@@ -104,7 +104,7 @@ class BackOfficeController extends AbstractController {
         $entities = [
             User::class,
             Room::class,
-            Medias::class
+            Media::class
         ];
 
         $entityManager = $this->getDoctrine()->getManager();
