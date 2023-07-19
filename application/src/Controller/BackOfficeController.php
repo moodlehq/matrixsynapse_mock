@@ -9,7 +9,7 @@ use App\Entity\RoomMember;
 use App\Entity\Room;
 use App\Entity\Threepids;
 use App\Entity\Tokens;
-use App\Entity\Users;
+use App\Entity\User;
 use App\Traits\GeneralTrait;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -36,9 +36,9 @@ class BackOfficeController extends AbstractController {
         if ($method === 'POST') {
             $entityManager = $this->getDoctrine()->getManager();
 
-            $user = $entityManager->getRepository(Users::class)->findOneBy(['userid' => '@admin:synapse']);
+            $user = $entityManager->getRepository(User::class)->findOneBy(['userid' => '@admin:synapse']);
             if (!$user) {
-                $user = new Users();
+                $user = new User();
                 $user->setServerid($serverID);
                 $user->setUserid('@admin:synapse');
                 $user->setDisplayname('Admin User');
@@ -102,7 +102,7 @@ class BackOfficeController extends AbstractController {
     public function backOfficeReset(string $serverID) : JsonResponse
     {
         $entities = [
-            Users::class,
+            User::class,
             Room::class,
             Medias::class
         ];
@@ -161,7 +161,7 @@ class BackOfficeController extends AbstractController {
     public function getAllUsers(string $serverID): JSONResponse
     {
         $users = $this->getDoctrine()
-            ->getRepository(Users::class)
+            ->getRepository(User::class)
             ->findBy(['serverid' => $serverID]);
 
         return new JsonResponse(
@@ -190,7 +190,7 @@ class BackOfficeController extends AbstractController {
             'rooms' => [],
         ];
 
-        $userRepository = $entityManager->getRepository(Users::class);
+        $userRepository = $entityManager->getRepository(User::class);
         $admin = $userRepository->findOneBy(
             [
                 'admin' => true,
@@ -200,7 +200,7 @@ class BackOfficeController extends AbstractController {
 
         if (property_exists($payload, 'users')) {
             foreach ($payload->users as $userdata) {
-                $user = new Users();
+                $user = new User();
                 $user->setServerid($serverID);
                 $user->setDisplayname($userdata->fullname);
                 $user->setUserid($userdata->id);

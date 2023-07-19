@@ -168,7 +168,7 @@ class Room
         return $this;
     }
 
-    public function addMember(Users $user): self
+    public function addMember(User $user): self
     {
         $roomMember = new RoomMember();
         $roomMember->setRoom($this);

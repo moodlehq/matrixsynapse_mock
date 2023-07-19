@@ -23,7 +23,7 @@ class Password
     private $serverid;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Users::class, inversedBy="passwords")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="passwords")
      * @ORM\JoinColumn(nullable=false)
      */
     private $userid;
@@ -50,12 +50,12 @@ class Password
         return $this;
     }
 
-    public function getUserid(): ?Users
+    public function getUserid(): ?User
     {
         return $this->userid;
     }
 
-    public function setUserid(?Users $userid): self
+    public function setUserid(?User $userid): self
     {
         $this->userid = $userid;
 

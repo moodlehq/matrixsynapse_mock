@@ -6,7 +6,7 @@ use App\Entity\Password;
 use App\Entity\Room;
 use App\Entity\RoomMember;
 use App\Entity\Tokens;
-use App\Entity\Users;
+use App\Entity\User;
 use App\Traits\GeneralTrait;
 use App\Traits\MatrixSynapseTrait;
 use stdClass;
@@ -126,7 +126,7 @@ class MatrixController extends AbstractController {
             }
 
             $entityManager = $this->getDoctrine()->getManager();
-            $user = $entityManager->getRepository(Users::class)->findOneBy($check['loginidentifier']);
+            $user = $entityManager->getRepository(User::class)->findOneBy($check['loginidentifier']);
 
             $passwordpatter = $user ? $user->getPasswordpattern() : null;
             $userid = $user ? $user->getId() : null;
@@ -309,7 +309,7 @@ class MatrixController extends AbstractController {
             return $check['message'];
         }
 
-        $user = $entityManager->getRepository(Users::class)->findOneBy([
+        $user = $entityManager->getRepository(User::class)->findOneBy([
             'serverid' => $serverID,
             'userid' => $payload->user_id,
         ]);

@@ -6,7 +6,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Entity\Room;
 use App\Entity\RoomMember;
 use App\Entity\Tokens;
-use App\Entity\Users;
+use App\Entity\User;
 
 trait MatrixSynapseTrait {
     private function getUnknownRoomResponse(): JsonResponse

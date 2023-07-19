@@ -7,7 +7,7 @@ use App\Entity\Externalids;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
-use App\Entity\Users;
+use App\Entity\User;
 use App\Entity\Threepids;
 use App\Entity\RoomMember;
 use App\Entity\Room;
@@ -55,7 +55,7 @@ class SynapseController extends AbstractController {
 
         // Add, update of get user info.
         $entityManager = $this->getDoctrine()->getManager();
-        $user = $entityManager->getRepository(Users::class)->findOneBy(['userid' => $userID, 'serverid' => $serverID]);
+        $user = $entityManager->getRepository(User::class)->findOneBy(['userid' => $userID, 'serverid' => $serverID]);
 
         if ($method == 'PUT' && !$user) {
             // Create user.
@@ -107,7 +107,7 @@ class SynapseController extends AbstractController {
      */
     private function createUser(string $serverID, string $userID, Request $request): JsonResponse
     {
-        $user = new Users();
+        $user = new User();
         return $this->upsertUser($serverID, $userID, $request, $user);
     }
 
@@ -119,7 +119,7 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    private function updateUser(string $serverID, string $userID, Request $request, Users $user): JsonResponse
+    private function updateUser(string $serverID, string $userID, Request $request, User $user): JsonResponse
     {
         return $this->upsertUser($serverID, $userID, $request, $user, 200);
     }
@@ -133,7 +133,7 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    private function upsertUser(string $serverID, string $userID, Request $request, Users $user, int $status = 201): JsonResponse
+    private function upsertUser(string $serverID, string $userID, Request $request, User $user, int $status = 201): JsonResponse
     {
         $payload = json_decode($request->getContent());
         $entityManager = $this->getDoctrine()->getManager();
@@ -274,7 +274,7 @@ class SynapseController extends AbstractController {
             return $check['message'];
         }
 
-        $user = $entityManager->getRepository(Users::class)->findOneBy([
+        $user = $entityManager->getRepository(User::class)->findOneBy([
             'serverid' => $serverID,
             'userid' => $payload->user_id,
         ]);

@@ -5,7 +5,7 @@ namespace App\Entity;
 use App\Repository\RoomMemberRepository;
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\Room;
-use App\Entity\Users;
+use App\Entity\User;
 
 /**
  * @ORM\Entity(repositoryClass=RoomMemberRepository::class)
@@ -31,7 +31,7 @@ class RoomMember
     private $room;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Users::class, inversedBy="rooms")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="rooms")
      * @ORM\JoinColumn(nullable=false)
      */
     private $user;
@@ -90,12 +90,12 @@ class RoomMember
         return $this->getRoom()->getRoomid();
     }
 
-    public function getUser(): Users
+    public function getUser(): User
     {
         return $this->user;
     }
 
-    public function setUser(Users $user): self
+    public function setUser(User $user): self
     {
         $this->user = $user;
 

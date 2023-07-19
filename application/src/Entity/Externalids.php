@@ -33,7 +33,7 @@ class Externalids
     private $serverid;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Users::class, inversedBy="externalids")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="externalids")
      * @ORM\JoinColumn(nullable=false)
      */
     private $userid;
@@ -79,12 +79,12 @@ class Externalids
         return $this;
     }
 
-    public function getUserid(): ?Users
+    public function getUserid(): ?User
     {
         return $this->userid;
     }
 
-    public function setUserid(?Users $userid): self
+    public function setUserid(?User $userid): self
     {
         $this->userid = $userid;
 
