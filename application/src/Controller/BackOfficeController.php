@@ -119,9 +119,9 @@ class BackOfficeController extends AbstractController {
                 ->findBy(['serverid' => $serverID]);
             foreach ($entities as $entity) {
                 $entityManager->remove($entity);
-                $entityManager->flush();
             }
         }
+        $entityManager->flush();
 
         return new JsonResponse((object) ['reset' => true]);
     }

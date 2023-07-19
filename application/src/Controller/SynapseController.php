@@ -322,7 +322,6 @@ class SynapseController extends AbstractController {
                 ->findBy(['serverid' => $serverID, 'roomid' => $roomID]);
         foreach ($roommembers as $entity) {
             $entityManager->remove($entity);
-            $entityManager->flush();
         }
 
         $room = $this->getDoctrine()
@@ -330,8 +329,8 @@ class SynapseController extends AbstractController {
                 ->findBy(['roomid' => $roomID]);
         if (!empty($room)) {
             $entityManager->remove($room[0]);
-            $entityManager->flush();
         }
+        $entityManager->flush();
 
         return new JsonResponse((object) [
             'delete_id' => substr(hash('sha256', (date("Ymdhms"))), 0, 18)
