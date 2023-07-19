@@ -30,7 +30,7 @@ class User
     private $displayname;
 
     /**
-     * @ORM\OneToMany(targetEntity=Threepids::class, mappedBy="userid", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=ThreePID::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $threepids;
 
@@ -128,14 +128,14 @@ class User
     }
 
     /**
-     * @return Collection<int, Threepids>
+     * @return Collection<int, ThreePID>
      */
-    public function getThreepids(): Collection
+    public function getThreePIDs(): Collection
     {
         return $this->threepids;
     }
 
-    public function addThreepid(Threepids $threepid): self
+    public function addThreePID(ThreePID $threepid): self
     {
         if (!$this->threepids->contains($threepid)) {
             $this->threepids[] = $threepid;
@@ -145,7 +145,7 @@ class User
         return $this;
     }
 
-    public function removeThreepid(Threepids $threepid): self
+    public function removeThreepid(ThreePID $threepid): self
     {
         if ($this->threepids->removeElement($threepid)) {
             // set the owning side to null (unless already changed)

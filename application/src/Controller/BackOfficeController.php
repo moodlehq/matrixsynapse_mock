@@ -7,7 +7,7 @@ use App\Entity\Medias;
 use App\Entity\Password;
 use App\Entity\RoomMember;
 use App\Entity\Room;
-use App\Entity\Threepids;
+use App\Entity\ThreePID;
 use App\Entity\Tokens;
 use App\Entity\User;
 use App\Traits\GeneralTrait;

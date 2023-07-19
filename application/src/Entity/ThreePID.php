@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\ThreepidsRepository;
+use App\Repository\ThreePIDRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=ThreepidsRepository::class)
+ * @ORM\Entity(repositoryClass=ThreePIDRepository::class)
  */
-class Threepids
+class ThreePID
 {
     /**
      * @ORM\Id

@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\User;
-use App\Entity\Threepids;
+use App\Entity\ThreePID;
 use App\Entity\RoomMember;
 use App\Entity\Room;
 use App\Entity\Tokens;
@@ -72,8 +72,8 @@ class SynapseController extends AbstractController {
         }
 
         // Finally return user info.
-        $threepids = $this->getDoctrine()->getRepository(Threepids::class)
-                ->getUserThreepids($serverID, $user->getId());
+        $threepids = $this->getDoctrine()->getRepository(ThreePID::class)
+                ->getUserThreePIDs($serverID, $user->getId());
         $externalids = $this->getDoctrine()->getRepository(ExternalId::class)
             ->getUserExternalIds($serverID, $user->getId());
 
@@ -137,7 +137,7 @@ class SynapseController extends AbstractController {
     {
         $payload = json_decode($request->getContent());
         $entityManager = $this->getDoctrine()->getManager();
-        $hasThreepids = false;
+        $hasThreePIDs = false;
         $hasExternalIds = false;
 
         $user->setServerid($serverID);
@@ -149,16 +149,16 @@ class SynapseController extends AbstractController {
         // Process threepids.
         if (!empty($payload->threepids)){
             foreach ($payload->threepids as $pid) {
-                $threepid = $entityManager->getRepository(Threepids::class)
+                $threepid = $entityManager->getRepository(ThreePID::class)
                         ->findOneBy(['serverid' => $serverID, 'userid' => $user->getId(), 'medium' => $pid->medium]);
                 if (!$threepid) {
-                    // New user, or existing user without any associated Threepids.
-                    $threepid = new Threepids();
+                    // New user, or existing user without any associated ThreePID.
+                    $threepid = new ThreePID();
                     $threepid->setMedium($pid->medium);
                     $threepid->setAddress($pid->address);
                     $threepid->setServerid($serverID);
 
-                    $user->addThreepid($threepid);
+                    $user->addThreePID($threepid);
                     $threepid->setUserid($user);
                 } else {
                     // Updating existing.
@@ -166,7 +166,7 @@ class SynapseController extends AbstractController {
                 }
                 $entityManager->persist($threepid);
             }
-            $hasThreepids = true;
+            $hasThreePIDs = true;
         }
 
         // Process access tokens.
@@ -225,7 +225,7 @@ class SynapseController extends AbstractController {
                 'erased' => false
         ];
 
-        if ($hasThreepids) {
+        if ($hasThreePIDs) {
             $payload->threepids['validated_at'] = time();
             $payload->threepids['added_at'] = time();
             $responseObj->threepids = [$payload->threepids];
