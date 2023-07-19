@@ -6,7 +6,7 @@ use App\Entity\Externalids;
 use App\Entity\Medias;
 use App\Entity\Password;
 use App\Entity\RoomMember;
-use App\Entity\Rooms;
+use App\Entity\Room;
 use App\Entity\Threepids;
 use App\Entity\Tokens;
 use App\Entity\Users;
@@ -103,7 +103,7 @@ class BackOfficeController extends AbstractController {
     {
         $entities = [
             Users::class,
-            Rooms::class,
+            Room::class,
             Medias::class
         ];
 
@@ -128,7 +128,7 @@ class BackOfficeController extends AbstractController {
     public function getAllRooms(string $serverID): JSONResponse
     {
         $rooms = $this->getDoctrine()
-            ->getRepository(Rooms::class)
+            ->getRepository(Room::class)
             ->findBy(['serverid' => $serverID]);
 
         $responsedata = (object) [
@@ -223,7 +223,7 @@ class BackOfficeController extends AbstractController {
                     $host,
                 );
 
-                $room = new Rooms();
+                $room = new Room();
                 $room->setRoomid($roomID);
                 $room->setName($roomName);
                 $room->setTopic($roomdata->topic ?? null);

@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Users;
 use App\Entity\Threepids;
 use App\Entity\RoomMember;
-use App\Entity\Rooms;
+use App\Entity\Room;
 use App\Entity\Tokens;
 use App\Traits\GeneralTrait;
 use App\Traits\MatrixSynapseTrait;
@@ -260,7 +260,7 @@ class SynapseController extends AbstractController {
         $entityManager = $this->getDoctrine()->getManager();
 
         // Check room exists.
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);
@@ -344,7 +344,7 @@ class SynapseController extends AbstractController {
         }
 
         $entityManager = $this->getDoctrine()->getManager();
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);
@@ -380,7 +380,7 @@ class SynapseController extends AbstractController {
         $entityManager = $this->getDoctrine()->getManager();
 
         // Check room exists.
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);

@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Password;
-use App\Entity\Rooms;
+use App\Entity\Room;
 use App\Entity\RoomMember;
 use App\Entity\Tokens;
 use App\Entity\Users;
@@ -245,7 +245,7 @@ class MatrixController extends AbstractController {
 
         // Store the room in the DB.
         $entityManager = $this->getDoctrine()->getManager();
-        $room = new Rooms();
+        $room = new Room();
 
         $room->setRoomid($roomID);
         $room->setName($roomName);
@@ -254,7 +254,7 @@ class MatrixController extends AbstractController {
         $room->setCreator($accessCheck['user_id']);
         if (isset($payload->room_alias_name) && !empty($payload->room_alias_name)) {
             $room_alias = "#{$payload->room_alias_name}:{$host}";
-            $check_alias = $entityManager->getRepository(Rooms::class)->findOneBy(['roomalias' => $room_alias]);
+            $check_alias = $entityManager->getRepository(Room::class)->findOneBy(['roomalias' => $room_alias]);
             if (empty($check_alias)) {
                 $room->setRoomAlias($room_alias);
                 $response['room_alias'] = $room_alias;
@@ -295,7 +295,7 @@ class MatrixController extends AbstractController {
         $entityManager = $this->getDoctrine()->getManager();
 
         // Check room exists.
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);
@@ -363,7 +363,7 @@ class MatrixController extends AbstractController {
         $entityManager = $this->getDoctrine()->getManager();
 
         // Check room exists.
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);
@@ -441,7 +441,7 @@ class MatrixController extends AbstractController {
         }
 
         $entityManager = $this->getDoctrine()->getManager();
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);

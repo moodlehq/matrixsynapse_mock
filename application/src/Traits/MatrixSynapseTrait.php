@@ -3,7 +3,7 @@
 namespace App\Traits;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
-use App\Entity\Rooms;
+use App\Entity\Room;
 use App\Entity\RoomMember;
 use App\Entity\Tokens;
 use App\Entity\Users;

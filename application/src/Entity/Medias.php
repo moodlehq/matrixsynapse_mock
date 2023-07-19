@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use App\Repository\MediasRepository;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Rooms;
+use App\Entity\Room;
 use App\Entity\Users;
 
 /**

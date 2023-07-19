@@ -272,7 +272,7 @@ class Users
         return $this->rooms;
     }
 
-    public function getMembership(Rooms $room): Rooms
+    public function getMembership(Room $room): Room
     {
         return $this->rooms->get($room);
     }
