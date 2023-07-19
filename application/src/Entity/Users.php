@@ -30,7 +30,7 @@ class Users
     private $displayname;
 
     /**
-     * @ORM\OneToMany(targetEntity=Threepids::class, mappedBy="userid")
+     * @ORM\OneToMany(targetEntity=Threepids::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $threepids;
 
@@ -40,7 +40,7 @@ class Users
     private $serverid;
 
     /**
-     * @ORM\OneToMany(targetEntity=Externalids::class, mappedBy="userid")
+     * @ORM\OneToMany(targetEntity=Externalids::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $externalids;
 
@@ -55,19 +55,39 @@ class Users
     private $passwordpattern;
 
     /**
-     * @ORM\OneToMany(targetEntity=Tokens::class, mappedBy="userid")
+     * @ORM\OneToMany(targetEntity=Tokens::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $tokens;
 
     /**
-     * @ORM\OneToMany(targetEntity=Passwords::class, mappedBy="userid")
+     * @ORM\OneToMany(targetEntity=Passwords::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $passwords;
+
+    /**
+     * @ORM\OneToMany(targetEntity=RoomMember::class, mappedBy="user", cascade={"persist", "remove"})
+     */
+    private Collection $rooms;
 
     /**
      * @ORM\Column(type="text", nullable=true)
      */
     private $avatarurl;
+
+    public function jsonSerialize(): \stdClass {
+        return (object) [
+            'id' => $this->id,
+            'admin' => $this->admin,
+            'displayname' => $this->displayname,
+            'externalids' => $this->externalids,
+            'passwordpattern' => $this->passwordpattern,
+            'passwords' => $this->passwords,
+            'serverid' => $this->serverid,
+            'threepids' => $this->threepids,
+            'tokens' => $this->tokens,
+            'userid' => $this->userid,
+        ];
+    }
 
     public function __construct()
     {
@@ -75,6 +95,7 @@ class Users
         $this->externalids = new ArrayCollection();
         $this->tokens = new ArrayCollection();
         $this->passwords = new ArrayCollection();
+        $this->rooms = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -244,5 +265,15 @@ class Users
         $this->passwords->add($password);
 
         return $this;
+    }
+
+    public function getMemberships(): Collection
+    {
+        return $this->rooms;
+    }
+
+    public function getMembership(Rooms $room): Rooms
+    {
+        return $this->rooms->get($room);
     }
 }

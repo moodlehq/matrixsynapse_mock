@@ -9,7 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Users;
 use App\Entity\Threepids;
-use App\Entity\Roommembers;
+use App\Entity\RoomMember;
 use App\Entity\Rooms;
 use App\Entity\Tokens;
 use App\Traits\GeneralTrait;
@@ -244,7 +244,7 @@ class SynapseController extends AbstractController {
     /**
      * Invite user into a room.
      *
-     * @Route("/v1/join/{roomID}", name="inviteUser")
+     * @Route("/v1/join/{roomID}", name="inviteUser", methods={"POST"})
      * @param string $serverID
      * @param Request $request
      * @return JsonResponse
@@ -257,10 +257,15 @@ class SynapseController extends AbstractController {
             return $accessCheck['message'];
         }
 
-        // Check if room exists.
-        $check = $this->roomExists($roomID);
-        if (!$check['status']) {
-            return $check['message'];
+        $entityManager = $this->getDoctrine()->getManager();
+
+        // Check room exists.
+        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+            'serverid' => $serverID,
+            'roomid' => $roomID,
+        ]);
+        if (!$room) {
+            return $this->getUnknownRoomResponse();
         }
 
         $payload = json_decode($request->getContent());
@@ -268,29 +273,51 @@ class SynapseController extends AbstractController {
         if (!$check['status']) {
             return $check['message'];
         }
-        $userID = $payload->user_id;
 
-        // Check if the user has already been invited.
-        $check = $this->isUserInvited($roomID, $userID);
-        if (!$check['status']) {
-            return $check['message'];
+        $user = $entityManager->getRepository(Users::class)->findOneBy([
+            'serverid' => $serverID,
+            'userid' => $payload->user_id,
+        ]);
+        if (!$user) {
+            return $this->getUnknownRoomResponse();
         }
 
-        // Check if the user is banned from the group.
-        $check = $this->isUserBanned($roomID, $userID);
-        if (!$check['status']) {
-            return $check['message'];
+        $membership = $entityManager->getRepository(RoomMember::class)->findOneBy([
+            'serverid' => $serverID,
+            'user' => $user,
+            'room' => $room,
+            'state' => null,
+        ]);
+
+        if ($membership) {
+            if ($membership->getAccepted()) {
+                // Already a member.
+                return new JsonResponse((object) [
+                    'errcode' => 'M_USER_EXISTS',
+                    'error' => 'The invitee is already a member of the room'
+                ], 403);
+            }
+
+            if ($membership->getBanned()) {
+                return new JsonResponse((object) [
+                    'errcode' => 'M_USER_IS_BANNED',
+                    'error' => 'you cannot invite the user due to being banned from the group.'
+                ], 403);
+            }
+
+            // Thenw aht!???
+            $membership->setAccepted(true);
+        } else {
+            // Store the room member in the DB.
+            $entityManager = $this->getDoctrine()->getManager();
+            $roomMember = new RoomMember();
+
+            $roomMember->setRoom($room);
+            $roomMember->setUser($user);
+            $roomMember->setAccepted(true);
+            $roomMember->setBanned();
+            $roomMember->setServerid($serverID);
         }
-
-        // Store the room member in the DB.
-        $entityManager = $this->getDoctrine()->getManager();
-        $roomMember = new Roommembers();
-
-        $roomMember->setRoomid($roomID);
-        $roomMember->setUserid($userID);
-        $roomMember->setAccepted(true);
-        $roomMember->setBanned();
-        $roomMember->setServerid($serverID);
 
         $entityManager->persist($roomMember);
         $entityManager->flush();
@@ -317,19 +344,16 @@ class SynapseController extends AbstractController {
         }
 
         $entityManager = $this->getDoctrine()->getManager();
-        $roommembers = $this->getDoctrine()
-                ->getRepository(Roommembers::class)
-                ->findBy(['serverid' => $serverID, 'roomid' => $roomID]);
-        foreach ($roommembers as $entity) {
-            $entityManager->remove($entity);
+        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+            'serverid' => $serverID,
+            'roomid' => $roomID,
+        ]);
+
+        if (!$room) {
+            return $this->getUnknownRoomResponse();
         }
 
-        $room = $this->getDoctrine()
-                ->getRepository(Rooms::class)
-                ->findBy(['roomid' => $roomID]);
-        if (!empty($room)) {
-            $entityManager->remove($room[0]);
-        }
+        $entityManager->remove($room);
         $entityManager->flush();
 
         return new JsonResponse((object) [
@@ -353,28 +377,28 @@ class SynapseController extends AbstractController {
             return $accessCheck['message'];
         }
 
-        // Check if room exists.
-        $check = $this->roomExists($roomID, true);
-        if (!$check['status']) {
-            return $check['message'];
+        $entityManager = $this->getDoctrine()->getManager();
+
+        // Check room exists.
+        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+            'serverid' => $serverID,
+            'roomid' => $roomID,
+        ]);
+        if (!$room) {
+            return $this->getUnknownRoomResponse();
         }
-        $room = $check['room'];
 
         // Get all joined members.
-        $room_members = $this->getDoctrine()
-            ->getRepository(Roommembers::class)
-            ->findBy(['roomid' => $roomID, 'serverid' => $serverID, 'state' => null]);
-        if (!empty($room_members)) {
-            $room_members = count((array)$room_members);
-        } else {
-            $room_members = 0;
-        }
+        $members = $this->getDoctrine()
+            ->getRepository(RoomMember::class)
+            ->findBy(['room' => $room, 'serverid' => $serverID, 'state' => null]);
+        $memberCount = count($members);
 
         return new JsonResponse((object) [
             'room_id' => $room->getRoomid(),
             'name' => $room->getName(),
             'canonical_alias' => $room->getRoomAlias(),
-            'joined_members' => $room_members,
+            'joined_members' => $memberCount,
             'creator' => $room->getCreator(),
             'avatar' => $room->getAvatar(),
             'topic' => $room->getTopic()

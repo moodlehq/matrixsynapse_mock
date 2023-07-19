@@ -2,15 +2,15 @@
 
 namespace App\Entity;
 
-use App\Repository\RoommembersRepository;
+use App\Repository\RoomMemberRepository;
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\Rooms;
 use App\Entity\Users;
 
 /**
- * @ORM\Entity(repositoryClass=RoommembersRepository::class)
+ * @ORM\Entity(repositoryClass=RoomMemberRepository::class)
  */
-class Roommembers
+class RoomMember
 {
     /**
      * @ORM\Id
@@ -25,14 +25,16 @@ class Roommembers
     private $serverid;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\ManyToOne(targetEntity=Rooms::class, inversedBy="members")
+     * @ORM\JoinColumn(nullable=false)
      */
-    private $roomid;
+    private $room;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\ManyToOne(targetEntity=Users::class, inversedBy="rooms")
+     * @ORM\JoinColumn(nullable=false)
      */
-    private $userid;
+    private $user;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -71,28 +73,38 @@ class Roommembers
         return $this;
     }
 
-    public function getRoomid(): ?string
+    public function getRoom(): Rooms
     {
-        return $this->roomid;
+        return $this->room;
     }
 
-    public function setRoomid(string $roomid): self
+    public function setRoom(Rooms $room): self
     {
-        $this->roomid = $roomid;
+        $this->room = $room;
+
+        return $this;
+    }
+
+    public function getRoomid(): ?string
+    {
+        return $this->getRoom()->getRoomid();
+    }
+
+    public function getUser(): Users
+    {
+        return $this->user;
+    }
+
+    public function setUser(Users $user): self
+    {
+        $this->user = $user;
 
         return $this;
     }
 
     public function getUserid(): ?string
     {
-        return $this->userid;
-    }
-
-    public function setUserid(string $userid): self
-    {
-        $this->userid = $userid;
-
-        return $this;
+        return $this->getUser()->getUserid();
     }
 
     public function getReason(): ?string

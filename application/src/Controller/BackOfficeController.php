@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Entity\Externalids;
 use App\Entity\Medias;
 use App\Entity\Passwords;
-use App\Entity\Roommembers;
+use App\Entity\RoomMember;
 use App\Entity\Rooms;
 use App\Entity\Threepids;
 use App\Entity\Tokens;
@@ -103,12 +103,7 @@ class BackOfficeController extends AbstractController {
     {
         $entities = [
             Users::class,
-            Tokens::class,
-            Passwords::class,
             Rooms::class,
-            Roommembers::class,
-            Threepids::class,
-            Externalids::class,
             Medias::class
         ];
 
