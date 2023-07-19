@@ -40,7 +40,7 @@ class User
     private $serverid;
 
     /**
-     * @ORM\OneToMany(targetEntity=Externalids::class, mappedBy="userid", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=ExternalId::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $externalids;
 
@@ -206,14 +206,14 @@ class User
     }
 
     /**
-     * @return Collection<int, Externalids>
+     * @return Collection<int, ExternalId>
      */
-    public function getExternalids(): Collection
+    public function getExternalIds(): Collection
     {
         return $this->externalids;
     }
 
-    public function addExternalid(Externalids $externalid): self
+    public function addExternalid(ExternalId $externalid): self
     {
         if (!$this->externalids->contains($externalid)) {
             $this->externalids[] = $externalid;
@@ -223,7 +223,7 @@ class User
         return $this;
     }
 
-    public function removeExternalid(Externalids $externalid): self
+    public function removeExternalid(ExternalId $externalid): self
     {
         if ($this->externalids->removeElement($externalid)) {
             // set the owning side to null (unless already changed)

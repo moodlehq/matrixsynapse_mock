@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use App\Entity\Externalids;
+use App\Entity\ExternalId;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
@@ -74,8 +74,8 @@ class SynapseController extends AbstractController {
         // Finally return user info.
         $threepids = $this->getDoctrine()->getRepository(Threepids::class)
                 ->getUserThreepids($serverID, $user->getId());
-        $externalids = $this->getDoctrine()->getRepository(Externalids::class)
-                ->getUserExternalids($serverID, $user->getId());
+        $externalids = $this->getDoctrine()->getRepository(ExternalId::class)
+            ->getUserExternalIds($serverID, $user->getId());
 
         return new JsonResponse((object) [
                 'name' => $userID,
@@ -138,7 +138,7 @@ class SynapseController extends AbstractController {
         $payload = json_decode($request->getContent());
         $entityManager = $this->getDoctrine()->getManager();
         $hasThreepids = false;
-        $hasExternalids = false;
+        $hasExternalIds = false;
 
         $user->setServerid($serverID);
         $user->setUserid($userID);
@@ -186,11 +186,11 @@ class SynapseController extends AbstractController {
         // Process external ids.
         if (!empty($payload->external_ids)){
             foreach ($payload->external_ids as $eid) {
-                $externalid = $entityManager->getRepository(Externalids::class)
+                $externalid = $entityManager->getRepository(ExternalId::class)
                         ->findOneBy(['serverid' => $serverID, 'userid' => $user->getId(), 'auth_provider' => $eid->auth_provider]);
                 if (!$externalid) {
-                    // New user, or existing user without any associated Externalids.
-                    $externalid = new Externalids();
+                    // New user, or existing user without any associated ExternalIds.
+                    $externalid = new ExternalId();
                     $externalid->setAuthProvider($eid->auth_provider);
                     $externalid->setServerid($serverID);
 
@@ -200,7 +200,7 @@ class SynapseController extends AbstractController {
                 $externalid->setExternalId($this->generateExternalId($eid->external_id));
                 $entityManager->persist($externalid);
             }
-            $hasExternalids = true;
+            $hasExternalIds = true;
         }
 
         $entityManager->persist($user);
@@ -231,7 +231,7 @@ class SynapseController extends AbstractController {
             $responseObj->threepids = [$payload->threepids];
         }
 
-        if ($hasExternalids) {
+        if ($hasExternalIds) {
             $payload->external_ids['validated_at'] = time();
             $payload->external_ids['added_at'] = time();
             $responseObj->threepids = [$payload->external_ids];

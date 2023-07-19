@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\ExternalidsRepository;
+use App\Repository\ExternalIdRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=ExternalidsRepository::class)
+ * @ORM\Entity(repositoryClass=ExternalidRepository::class)
  */
-class Externalids
+class ExternalId
 {
     /**
      * @ORM\Id
