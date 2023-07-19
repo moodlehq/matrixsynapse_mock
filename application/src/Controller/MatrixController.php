@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Entity\Password;
 use App\Entity\Room;
 use App\Entity\RoomMember;
-use App\Entity\Tokens;
+use App\Entity\Token;
 use App\Entity\User;
 use App\Traits\GeneralTrait;
 use App\Traits\MatrixSynapseTrait;
@@ -137,7 +137,7 @@ class MatrixController extends AbstractController {
 
             // Check if user with its password is found.
             if ($user && $password) {
-                $token = $entityManager->getRepository(Tokens::class)->findOneBy(['userid' => $user->getId()]);
+                $token = $entityManager->getRepository(Token::class)->findOneBy(['userid' => $user->getId()]);
 
                 // Assign client server id if the server id is NULL.
                 if (is_null($token->getServerid())) {

@@ -8,7 +8,7 @@ use App\Entity\Password;
 use App\Entity\RoomMember;
 use App\Entity\Room;
 use App\Entity\ThreePID;
-use App\Entity\Tokens;
+use App\Entity\Token;
 use App\Entity\User;
 use App\Traits\GeneralTrait;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -46,11 +46,11 @@ class BackOfficeController extends AbstractController {
             }
 
             // Process tokens.
-            $token = $entityManager->getRepository(Tokens::class)
+            $token = $entityManager->getRepository(Token::class)
                     ->findOneBy(['userid' => $user->getId()]);
             if (!$token) {
                 // New user, or existing user without any associated Tokens.
-                $token = new Tokens();
+                $token = new Token();
                 $token->setAccesstoken($this->generateToken('access-token'));
                 $token->setRefreshtoken($this->generateToken('refresh-token'));
                 $token->setExpiresinms();

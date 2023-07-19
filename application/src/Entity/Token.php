@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\TokensRepository;
+use App\Repository\TokenRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=TokensRepository::class)
+ * @ORM\Entity(repositoryClass=TokenRepository::class)
  */
-class Tokens
+class Token
 {
     /**
      * @ORM\Id

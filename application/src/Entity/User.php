@@ -55,7 +55,7 @@ class User
     private $passwordpattern;
 
     /**
-     * @ORM\OneToMany(targetEntity=Tokens::class, mappedBy="userid", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=Token::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $tokens;
 
@@ -236,14 +236,14 @@ class User
     }
 
     /**
-     * @return Collection<Tokens>
+     * @return Collection<Token>
      */
     public function getTokens(): Collection
     {
         return $this->tokens;
     }
 
-    public function addToken(Tokens $token): self
+    public function addToken(Token $token): self
     {
         $token->setUserid($this);
         $this->tokens->add($token);
