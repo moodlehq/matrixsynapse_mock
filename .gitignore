@@ -10,3 +10,4 @@
 /application/vendor/
 ###< symfony/framework-bundle ###
 .idea/*
+application/public/medias
