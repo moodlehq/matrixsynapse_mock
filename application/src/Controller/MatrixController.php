@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Passwords;
 use App\Entity\Rooms;
-use App\Entity\Roommembers;
+use App\Entity\RoomMember;
 use App\Entity\Tokens;
 use App\Entity\Users;
 use App\Traits\GeneralTrait;
@@ -280,7 +280,11 @@ class MatrixController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    public function kick(string $roomID, Request $request):JsonResponse {
+    public function kick(
+        string $serverID,
+        string $roomID,
+        Request $request,
+    ): JsonResponse {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
         $accessCheck = $this->authHttpCheck(['POST'], $request);
@@ -288,10 +292,15 @@ class MatrixController extends AbstractController {
             return $accessCheck['message'];
         }
 
+        $entityManager = $this->getDoctrine()->getManager();
+
         // Check room exists.
-        $roomCheck = $this->roomExists($roomID);
-        if (!$roomCheck['status']) {
-            return $roomCheck['message'];
+        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+            'serverid' => $serverID,
+            'roomid' => $roomID,
+        ]);
+        if (!$room) {
+            return $this->getUnknownRoomResponse();
         }
 
         $payload = json_decode($request->getContent());
@@ -300,20 +309,32 @@ class MatrixController extends AbstractController {
             return $check['message'];
         }
 
-        $roommembers = $this->getRoomMember($roomID, $payload->user_id);
-        if (empty($roommembers)) {
+        $user = $entityManager->getRepository(Users::class)->findOneBy([
+            'serverid' => $serverID,
+            'userid' => $payload->user_id,
+        ]);
+        if (!$user) {
+            return $this->getUnknownRoomResponse();
+        }
+
+        $membership = $entityManager->getRepository(RoomMember::class)->findOneBy([
+            'serverid' => $serverID,
+            'room' => $room,
+            'user' => $user,
+        ]);
+
+        if (empty($membership)) {
             return new JsonResponse((object) [
                 'errcode' => 'M_NOT_MEMBER',
                 'error' => 'The target user_id is not a room member.'
             ], 403);
         }
 
-        // Update th membership.
-        $roommembers->setState('leave');
-        $roommembers->setReason($payload->reason ?? null);
+        // Update the membership.
+        $membership->setState('leave');
+        $membership->setReason($payload->reason ?? null);
 
-        $entityManager = $this->getDoctrine()->getManager();
-        $entityManager->persist($roommembers);
+        $entityManager->persist($membership);
         $entityManager->flush();
         return new JsonResponse((object)[]);
     }
@@ -339,12 +360,17 @@ class MatrixController extends AbstractController {
             return $accessCheck['message'];
         }
 
-        // Check room exists. If exists, "room" property is added.
-        $roomCheck = $this->roomExists($roomID, true);
-        if (!$roomCheck['status']) {
-            return $roomCheck['message'];
+        $entityManager = $this->getDoctrine()->getManager();
+
+        // Check room exists.
+        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+            'serverid' => $serverID,
+            'roomid' => $roomID,
+        ]);
+        if (!$room) {
+            return $this->getUnknownRoomResponse();
         }
-        $room = $roomCheck['room'];
+
         $payload = json_decode($request->getContent());
 
         if ($eventType == 'm.room.topic') {
@@ -414,27 +440,31 @@ class MatrixController extends AbstractController {
             return $accessCheck['message'];
         }
 
+        $entityManager = $this->getDoctrine()->getManager();
+        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+            'serverid' => $serverID,
+            'roomid' => $roomID,
+        ]);
+
+        if (!$room) {
+            return $this->getUnknownRoomResponse();
+        }
+
         // Get all joined members.
-        $room_members = $this->getDoctrine()
-            ->getRepository(Roommembers::class)
-            ->findBy(['roomid' => $roomID, 'serverid' => $serverID, 'state' => null]);
+        $members = $this->getDoctrine()
+            ->getRepository(RoomMember::class)
+            ->findBy(['room' => $room, 'serverid' => $serverID, 'state' => null]);
 
-        $joined_members = new stdClass();
-        foreach ($room_members as $member) {
-            $userid = $member->getUserid();
-
-            $user = $this->getDoctrine()
-                ->getRepository(Users::class)
-                ->findBy(['userid' => $userid, 'serverid' => $serverID])[0];
-
-            $userdetail = new stdClass();
-            $userdetail->avatar_url = $user->getAvatarurl();
-            $userdetail->display_name = $user->getDisplayname();
-            $joined_members->{$userid} = $userdetail;
+        $memberinfo = [];
+        foreach ($members as $member) {
+            $memberinfo[$member->getUser()->getUserid()] = (object) [
+                'avatar_url' => $member->getUser()->getAvatarurl(),
+                'display_name' => $member->getUser()->getDisplayname(),
+            ];
         }
 
         return new JsonResponse((object) [
-            'joined' => $joined_members
+            'joined' => (object) $memberinfo,
         ], 200);
     }
 }

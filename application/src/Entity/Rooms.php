@@ -6,7 +6,7 @@ use App\Repository\RoomsRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Roommembers;
+use App\Entity\RoomMember;
 
 /**
  * @ORM\Entity(repositoryClass=RoomsRepository::class)
@@ -54,6 +54,30 @@ class Rooms
      * @ORM\Column(type="string", length=255)
      */
     private $creator;
+
+    /**
+     * @ORM\OneToMany(targetEntity=RoomMember::class, mappedBy="room", cascade={"persist", "remove"})
+     */
+    private Collection $members;
+
+    public function jsonSerialize(): \stdClass
+    {
+        return (object) [
+            'id' => $this->id,
+            'serverid' => $this->serverid,
+            'name' => $this->name,
+            'topic' => $this->topic,
+            'room_id' => $this->roomid,
+            'avatar' => $this->avatar,
+            'roomalias' => $this->roomalias,
+            'creator' => $this->creator,
+        ];
+    }
+
+    public function __construct()
+    {
+        $this->members = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -142,5 +166,20 @@ class Rooms
         $this->creator = $creator;
 
         return $this;
+    }
+
+    public function addMember(Users $user): self
+    {
+        $roomMember = new RoomMember();
+        $roomMember->setRoom($this);
+        $roomMember->setUser($user);
+        $this->members->add($user);
+
+        return $this;
+    }
+
+    public function getMembers(): Collection
+    {
+        return $this->members;
     }
 }

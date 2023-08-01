@@ -2,32 +2,32 @@
 
 namespace App\Repository;
 
-use App\Entity\Roommembers;
+use App\Entity\RoomMember;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Roommembers>
+ * @extends ServiceEntityRepository<RoomMember>
  *
- * @method Roommembers|null find($id, $lockMode = null, $lockVersion = null)
- * @method Roommembers|null findOneBy(array $criteria, array $orderBy = null)
- * @method Roommembers[]    findAll()
- * @method Roommembers[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method RoomMember|null find($id, $lockMode = null, $lockVersion = null)
+ * @method RoomMember|null findOneBy(array $criteria, array $orderBy = null)
+ * @method RoomMember[]    findAll()
+ * @method RoomMember[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class RoommembersRepository extends ServiceEntityRepository
+class RoomMemberRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Roommembers::class);
+        parent::__construct($registry, RoomMember::class);
     }
 
     /**
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function add(Roommembers $entity, bool $flush = true): void
+    public function add(RoomMember $entity, bool $flush = true): void
     {
         $this->_em->persist($entity);
         if ($flush) {
@@ -39,7 +39,7 @@ class RoommembersRepository extends ServiceEntityRepository
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function remove(Roommembers $entity, bool $flush = true): void
+    public function remove(RoomMember $entity, bool $flush = true): void
     {
         $this->_em->remove($entity);
         if ($flush) {
