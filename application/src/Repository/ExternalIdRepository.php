@@ -2,32 +2,32 @@
 
 namespace App\Repository;
 
-use App\Entity\Externalids;
+use App\Entity\ExternalId;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Externalids>
+ * @extends ServiceEntityRepository<ExternalId>
  *
- * @method Externalids|null find($id, $lockMode = null, $lockVersion = null)
- * @method Externalids|null findOneBy(array $criteria, array $orderBy = null)
- * @method Externalids[]    findAll()
- * @method Externalids[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method ExternalId|null find($id, $lockMode = null, $lockVersion = null)
+ * @method ExternalId|null findOneBy(array $criteria, array $orderBy = null)
+ * @method ExternalId[]    findAll()
+ * @method ExternalId[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ExternalidsRepository extends ServiceEntityRepository
+class ExternalIdRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Externalids::class);
+        parent::__construct($registry, ExternalId::class);
     }
 
     /**
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function add(Externalids $entity, bool $flush = true): void
+    public function add(ExternalId $entity, bool $flush = true): void
     {
         $this->_em->persist($entity);
         if ($flush) {
@@ -39,7 +39,7 @@ class ExternalidsRepository extends ServiceEntityRepository
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function remove(Externalids $entity, bool $flush = true): void
+    public function remove(ExternalId $entity, bool $flush = true): void
     {
         $this->_em->remove($entity);
         if ($flush) {
@@ -54,7 +54,7 @@ class ExternalidsRepository extends ServiceEntityRepository
      * @param string $serverID
      * @return float|int|mixed|string
      */
-    public function getUserExternalids(string $serverID, string $userID)
+    public function getUserExternalIds(string $serverID, string $userID)
     {
         return $this->createQueryBuilder('t')
                 ->andWhere('t.userid = :userid')

@@ -5,7 +5,7 @@ namespace App\Service;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use App\Entity\Tokens;
+use App\Entity\Token;
 use Doctrine\ORM\EntityManagerInterface;
 
 class ApiCheck extends AbstractController {
@@ -67,7 +67,7 @@ class ApiCheck extends AbstractController {
      */
     private function isValidAuthToken(string $authToken): ?object
     {
-        return $this->entityManger->getRepository(Tokens::class)->findOneBy(['accesstoken' => $authToken]);
+        return $this->entityManger->getRepository(Token::class)->findOneBy(['accesstoken' => $authToken]);
     }
 
     /**

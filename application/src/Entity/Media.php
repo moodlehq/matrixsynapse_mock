@@ -2,15 +2,15 @@
 
 namespace App\Entity;
 
-use App\Repository\MediasRepository;
+use App\Repository\MediaRepository;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Rooms;
-use App\Entity\Users;
+use App\Entity\Room;
+use App\Entity\User;
 
 /**
- * @ORM\Entity(repositoryClass=MediasRepository::class)
+ * @ORM\Entity(repositoryClass=MediaRepository::class)
  */
-class Medias
+class Media
 {
     /**
      * @ORM\Id

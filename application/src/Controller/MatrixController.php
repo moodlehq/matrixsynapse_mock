@@ -2,11 +2,11 @@
 
 namespace App\Controller;
 
-use App\Entity\Passwords;
-use App\Entity\Rooms;
+use App\Entity\Password;
+use App\Entity\Room;
 use App\Entity\RoomMember;
-use App\Entity\Tokens;
-use App\Entity\Users;
+use App\Entity\Token;
+use App\Entity\User;
 use App\Traits\GeneralTrait;
 use App\Traits\MatrixSynapseTrait;
 use stdClass;
@@ -126,18 +126,18 @@ class MatrixController extends AbstractController {
             }
 
             $entityManager = $this->getDoctrine()->getManager();
-            $user = $entityManager->getRepository(Users::class)->findOneBy($check['loginidentifier']);
+            $user = $entityManager->getRepository(User::class)->findOneBy($check['loginidentifier']);
 
             $passwordpatter = $user ? $user->getPasswordpattern() : null;
             $userid = $user ? $user->getId() : null;
-            $password = $entityManager->getRepository(Passwords::class)->findOneBy([
+            $password = $entityManager->getRepository(Password::class)->findOneBy([
                 'password' => $this->hashPassword($payload->password, $passwordpatter)['token'],
                 'userid' => $userid
             ]);
 
             // Check if user with its password is found.
             if ($user && $password) {
-                $token = $entityManager->getRepository(Tokens::class)->findOneBy(['userid' => $user->getId()]);
+                $token = $entityManager->getRepository(Token::class)->findOneBy(['userid' => $user->getId()]);
 
                 // Assign client server id if the server id is NULL.
                 if (is_null($token->getServerid())) {
@@ -245,7 +245,7 @@ class MatrixController extends AbstractController {
 
         // Store the room in the DB.
         $entityManager = $this->getDoctrine()->getManager();
-        $room = new Rooms();
+        $room = new Room();
 
         $room->setRoomid($roomID);
         $room->setName($roomName);
@@ -254,7 +254,7 @@ class MatrixController extends AbstractController {
         $room->setCreator($accessCheck['user_id']);
         if (isset($payload->room_alias_name) && !empty($payload->room_alias_name)) {
             $room_alias = "#{$payload->room_alias_name}:{$host}";
-            $check_alias = $entityManager->getRepository(Rooms::class)->findOneBy(['roomalias' => $room_alias]);
+            $check_alias = $entityManager->getRepository(Room::class)->findOneBy(['roomalias' => $room_alias]);
             if (empty($check_alias)) {
                 $room->setRoomAlias($room_alias);
                 $response['room_alias'] = $room_alias;
@@ -295,7 +295,7 @@ class MatrixController extends AbstractController {
         $entityManager = $this->getDoctrine()->getManager();
 
         // Check room exists.
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);
@@ -309,7 +309,7 @@ class MatrixController extends AbstractController {
             return $check['message'];
         }
 
-        $user = $entityManager->getRepository(Users::class)->findOneBy([
+        $user = $entityManager->getRepository(User::class)->findOneBy([
             'serverid' => $serverID,
             'userid' => $payload->user_id,
         ]);
@@ -363,7 +363,7 @@ class MatrixController extends AbstractController {
         $entityManager = $this->getDoctrine()->getManager();
 
         // Check room exists.
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);
@@ -441,7 +441,7 @@ class MatrixController extends AbstractController {
         }
 
         $entityManager = $this->getDoctrine()->getManager();
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);

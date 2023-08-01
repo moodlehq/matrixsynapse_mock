@@ -2,32 +2,32 @@
 
 namespace App\Repository;
 
-use App\Entity\Threepids;
+use App\Entity\ThreePID;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Threepids>
+ * @extends ServiceEntityRepository<ThreePID>
  *
- * @method Threepids|null find($id, $lockMode = null, $lockVersion = null)
- * @method Threepids|null findOneBy(array $criteria, array $orderBy = null)
- * @method Threepids[]    findAll()
- * @method Threepids[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method ThreePID|null find($id, $lockMode = null, $lockVersion = null)
+ * @method ThreePID|null findOneBy(array $criteria, array $orderBy = null)
+ * @method ThreePID[]    findAll()
+ * @method ThreePID[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ThreepidsRepository extends ServiceEntityRepository
+class ThreePIDRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Threepids::class);
+        parent::__construct($registry, ThreePID::class);
     }
 
     /**
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function add(Threepids $entity, bool $flush = true): void
+    public function add(ThreePID $entity, bool $flush = true): void
     {
         $this->_em->persist($entity);
         if ($flush) {
@@ -39,7 +39,7 @@ class ThreepidsRepository extends ServiceEntityRepository
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function remove(Threepids $entity, bool $flush = true): void
+    public function remove(ThreePID $entity, bool $flush = true): void
     {
         $this->_em->remove($entity);
         if ($flush) {
@@ -54,7 +54,7 @@ class ThreepidsRepository extends ServiceEntityRepository
      * @param string $serverID
      * @return float|int|mixed|string
      */
-    public function getUserThreepids(string $serverID, string $userID)
+    public function getUserThreePIDs(string $serverID, string $userID)
     {
         return $this->createQueryBuilder('t')
                 ->andWhere('t.userid = :userid')

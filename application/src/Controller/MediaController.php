@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\Medias;
+use App\Entity\Media;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -58,7 +58,7 @@ class MediaController extends AbstractController {
         $filesystem = new Filesystem();
         $filesystem->dumpFile($filepath, file_get_contents("php://input"));
 
-        $medias = new Medias();
+        $medias = new Media();
         $medias->setContenturi($contenturi);
         $medias->setServerid($serverID);
 

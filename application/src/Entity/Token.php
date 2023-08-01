@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\TokensRepository;
+use App\Repository\TokenRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=TokensRepository::class)
+ * @ORM\Entity(repositoryClass=TokenRepository::class)
  */
-class Tokens
+class Token
 {
     /**
      * @ORM\Id
@@ -18,7 +18,7 @@ class Tokens
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Users::class, inversedBy="tokens")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="tokens")
      * @ORM\JoinColumn(nullable=false)
      */
     private $userid;
@@ -48,12 +48,12 @@ class Tokens
         return $this->id;
     }
 
-    public function getUserid(): ?Users
+    public function getUserid(): ?User
     {
         return $this->userid;
     }
 
-    public function setUserid(?Users $userid): self
+    public function setUserid(?User $userid): self
     {
         $this->userid = $userid;
 

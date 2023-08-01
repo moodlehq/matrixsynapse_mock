@@ -2,15 +2,15 @@
 
 namespace App\Entity;
 
-use App\Repository\UsersRepository;
+use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=UsersRepository::class)
+ * @ORM\Entity(repositoryClass=UserRepository::class)
  */
-class Users
+class User
 {
     /**
      * @ORM\Id
@@ -30,7 +30,7 @@ class Users
     private $displayname;
 
     /**
-     * @ORM\OneToMany(targetEntity=Threepids::class, mappedBy="userid", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=ThreePID::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $threepids;
 
@@ -40,7 +40,7 @@ class Users
     private $serverid;
 
     /**
-     * @ORM\OneToMany(targetEntity=Externalids::class, mappedBy="userid", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=ExternalId::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $externalids;
 
@@ -55,12 +55,12 @@ class Users
     private $passwordpattern;
 
     /**
-     * @ORM\OneToMany(targetEntity=Tokens::class, mappedBy="userid", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=Token::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $tokens;
 
     /**
-     * @ORM\OneToMany(targetEntity=Passwords::class, mappedBy="userid", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=Password::class, mappedBy="userid", cascade={"persist", "remove"})
      */
     private $passwords;
 
@@ -128,14 +128,14 @@ class Users
     }
 
     /**
-     * @return Collection<int, Threepids>
+     * @return Collection<int, ThreePID>
      */
-    public function getThreepids(): Collection
+    public function getThreePIDs(): Collection
     {
         return $this->threepids;
     }
 
-    public function addThreepid(Threepids $threepid): self
+    public function addThreePID(ThreePID $threepid): self
     {
         if (!$this->threepids->contains($threepid)) {
             $this->threepids[] = $threepid;
@@ -145,7 +145,7 @@ class Users
         return $this;
     }
 
-    public function removeThreepid(Threepids $threepid): self
+    public function removeThreepid(ThreePID $threepid): self
     {
         if ($this->threepids->removeElement($threepid)) {
             // set the owning side to null (unless already changed)
@@ -206,14 +206,14 @@ class Users
     }
 
     /**
-     * @return Collection<int, Externalids>
+     * @return Collection<int, ExternalId>
      */
-    public function getExternalids(): Collection
+    public function getExternalIds(): Collection
     {
         return $this->externalids;
     }
 
-    public function addExternalid(Externalids $externalid): self
+    public function addExternalid(ExternalId $externalid): self
     {
         if (!$this->externalids->contains($externalid)) {
             $this->externalids[] = $externalid;
@@ -223,7 +223,7 @@ class Users
         return $this;
     }
 
-    public function removeExternalid(Externalids $externalid): self
+    public function removeExternalid(ExternalId $externalid): self
     {
         if ($this->externalids->removeElement($externalid)) {
             // set the owning side to null (unless already changed)
@@ -236,14 +236,14 @@ class Users
     }
 
     /**
-     * @return Collection<Tokens>
+     * @return Collection<Token>
      */
     public function getTokens(): Collection
     {
         return $this->tokens;
     }
 
-    public function addToken(Tokens $token): self
+    public function addToken(Token $token): self
     {
         $token->setUserid($this);
         $this->tokens->add($token);
@@ -252,14 +252,14 @@ class Users
     }
 
     /**
-     * @return Collection<Passwords>
+     * @return Collection<Password>
      */
     public function getPasswords(): Collection
     {
         return $this->passwords;
     }
 
-    public function addPasswords(Passwords $password): self
+    public function addPassword(Password $password): self
     {
         $password->setUserid($this);
         $this->passwords->add($password);
@@ -272,7 +272,7 @@ class Users
         return $this->rooms;
     }
 
-    public function getMembership(Rooms $room): Rooms
+    public function getMembership(Room $room): Room
     {
         return $this->rooms->get($room);
     }

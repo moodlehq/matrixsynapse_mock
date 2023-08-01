@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\PasswordsRepository;
+use App\Repository\PasswordRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=PasswordsRepository::class)
+ * @ORM\Entity(repositoryClass=PasswordRepository::class)
  */
-class Passwords
+class Password
 {
     /**
      * @ORM\Id
@@ -23,7 +23,7 @@ class Passwords
     private $serverid;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Users::class, inversedBy="passwords")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="passwords")
      * @ORM\JoinColumn(nullable=false)
      */
     private $userid;
@@ -50,12 +50,12 @@ class Passwords
         return $this;
     }
 
-    public function getUserid(): ?Users
+    public function getUserid(): ?User
     {
         return $this->userid;
     }
 
-    public function setUserid(?Users $userid): self
+    public function setUserid(?User $userid): self
     {
         $this->userid = $userid;
 

@@ -3,15 +3,15 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use App\Entity\Externalids;
+use App\Entity\ExternalId;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
-use App\Entity\Users;
-use App\Entity\Threepids;
+use App\Entity\User;
+use App\Entity\ThreePID;
 use App\Entity\RoomMember;
-use App\Entity\Rooms;
-use App\Entity\Tokens;
+use App\Entity\Room;
+use App\Entity\Token;
 use App\Traits\GeneralTrait;
 use App\Traits\MatrixSynapseTrait;
 
@@ -55,7 +55,7 @@ class SynapseController extends AbstractController {
 
         // Add, update of get user info.
         $entityManager = $this->getDoctrine()->getManager();
-        $user = $entityManager->getRepository(Users::class)->findOneBy(['userid' => $userID, 'serverid' => $serverID]);
+        $user = $entityManager->getRepository(User::class)->findOneBy(['userid' => $userID, 'serverid' => $serverID]);
 
         if ($method == 'PUT' && !$user) {
             // Create user.
@@ -72,10 +72,10 @@ class SynapseController extends AbstractController {
         }
 
         // Finally return user info.
-        $threepids = $this->getDoctrine()->getRepository(Threepids::class)
-                ->getUserThreepids($serverID, $user->getId());
-        $externalids = $this->getDoctrine()->getRepository(Externalids::class)
-                ->getUserExternalids($serverID, $user->getId());
+        $threepids = $this->getDoctrine()->getRepository(ThreePID::class)
+                ->getUserThreePIDs($serverID, $user->getId());
+        $externalids = $this->getDoctrine()->getRepository(ExternalId::class)
+            ->getUserExternalIds($serverID, $user->getId());
 
         return new JsonResponse((object) [
                 'name' => $userID,
@@ -107,7 +107,7 @@ class SynapseController extends AbstractController {
      */
     private function createUser(string $serverID, string $userID, Request $request): JsonResponse
     {
-        $user = new Users();
+        $user = new User();
         return $this->upsertUser($serverID, $userID, $request, $user);
     }
 
@@ -119,7 +119,7 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    private function updateUser(string $serverID, string $userID, Request $request, Users $user): JsonResponse
+    private function updateUser(string $serverID, string $userID, Request $request, User $user): JsonResponse
     {
         return $this->upsertUser($serverID, $userID, $request, $user, 200);
     }
@@ -133,12 +133,12 @@ class SynapseController extends AbstractController {
      * @param Request $request
      * @return JsonResponse
      */
-    private function upsertUser(string $serverID, string $userID, Request $request, Users $user, int $status = 201): JsonResponse
+    private function upsertUser(string $serverID, string $userID, Request $request, User $user, int $status = 201): JsonResponse
     {
         $payload = json_decode($request->getContent());
         $entityManager = $this->getDoctrine()->getManager();
-        $hasThreepids = false;
-        $hasExternalids = false;
+        $hasThreePIDs = false;
+        $hasExternalIds = false;
 
         $user->setServerid($serverID);
         $user->setUserid($userID);
@@ -149,16 +149,16 @@ class SynapseController extends AbstractController {
         // Process threepids.
         if (!empty($payload->threepids)){
             foreach ($payload->threepids as $pid) {
-                $threepid = $entityManager->getRepository(Threepids::class)
+                $threepid = $entityManager->getRepository(ThreePID::class)
                         ->findOneBy(['serverid' => $serverID, 'userid' => $user->getId(), 'medium' => $pid->medium]);
                 if (!$threepid) {
-                    // New user, or existing user without any associated Threepids.
-                    $threepid = new Threepids();
+                    // New user, or existing user without any associated ThreePID.
+                    $threepid = new ThreePID();
                     $threepid->setMedium($pid->medium);
                     $threepid->setAddress($pid->address);
                     $threepid->setServerid($serverID);
 
-                    $user->addThreepid($threepid);
+                    $user->addThreePID($threepid);
                     $threepid->setUserid($user);
                 } else {
                     // Updating existing.
@@ -166,14 +166,14 @@ class SynapseController extends AbstractController {
                 }
                 $entityManager->persist($threepid);
             }
-            $hasThreepids = true;
+            $hasThreePIDs = true;
         }
 
         // Process access tokens.
-        $token = $entityManager->getRepository(Tokens::class)->findOneBy(['userid' => $user->getId()]);
+        $token = $entityManager->getRepository(Token::class)->findOneBy(['userid' => $user->getId()]);
         if (!$token) {
             // New user, or existing user without any associated Tokens.
-            $token = new Tokens();
+            $token = new Token();
             $token->setAccesstoken($this->generateToken('access-token'));
             $token->setRefreshtoken($this->generateToken('refresh-token'));
             $token->setServerid($serverID);
@@ -186,11 +186,11 @@ class SynapseController extends AbstractController {
         // Process external ids.
         if (!empty($payload->external_ids)){
             foreach ($payload->external_ids as $eid) {
-                $externalid = $entityManager->getRepository(Externalids::class)
+                $externalid = $entityManager->getRepository(ExternalId::class)
                         ->findOneBy(['serverid' => $serverID, 'userid' => $user->getId(), 'auth_provider' => $eid->auth_provider]);
                 if (!$externalid) {
-                    // New user, or existing user without any associated Externalids.
-                    $externalid = new Externalids();
+                    // New user, or existing user without any associated ExternalIds.
+                    $externalid = new ExternalId();
                     $externalid->setAuthProvider($eid->auth_provider);
                     $externalid->setServerid($serverID);
 
@@ -200,7 +200,7 @@ class SynapseController extends AbstractController {
                 $externalid->setExternalId($this->generateExternalId($eid->external_id));
                 $entityManager->persist($externalid);
             }
-            $hasExternalids = true;
+            $hasExternalIds = true;
         }
 
         $entityManager->persist($user);
@@ -225,13 +225,13 @@ class SynapseController extends AbstractController {
                 'erased' => false
         ];
 
-        if ($hasThreepids) {
+        if ($hasThreePIDs) {
             $payload->threepids['validated_at'] = time();
             $payload->threepids['added_at'] = time();
             $responseObj->threepids = [$payload->threepids];
         }
 
-        if ($hasExternalids) {
+        if ($hasExternalIds) {
             $payload->external_ids['validated_at'] = time();
             $payload->external_ids['added_at'] = time();
             $responseObj->threepids = [$payload->external_ids];
@@ -260,7 +260,7 @@ class SynapseController extends AbstractController {
         $entityManager = $this->getDoctrine()->getManager();
 
         // Check room exists.
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);
@@ -274,7 +274,7 @@ class SynapseController extends AbstractController {
             return $check['message'];
         }
 
-        $user = $entityManager->getRepository(Users::class)->findOneBy([
+        $user = $entityManager->getRepository(User::class)->findOneBy([
             'serverid' => $serverID,
             'userid' => $payload->user_id,
         ]);
@@ -344,7 +344,7 @@ class SynapseController extends AbstractController {
         }
 
         $entityManager = $this->getDoctrine()->getManager();
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);
@@ -380,7 +380,7 @@ class SynapseController extends AbstractController {
         $entityManager = $this->getDoctrine()->getManager();
 
         // Check room exists.
-        $room = $entityManager->getRepository(Rooms::class)->findOneBy([
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
             'serverid' => $serverID,
             'roomid' => $roomID,
         ]);

@@ -3,10 +3,10 @@
 namespace App\Traits;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
-use App\Entity\Rooms;
+use App\Entity\Room;
 use App\Entity\RoomMember;
-use App\Entity\Tokens;
-use App\Entity\Users;
+use App\Entity\Token;
+use App\Entity\User;
 
 trait MatrixSynapseTrait {
     private function getUnknownRoomResponse(): JsonResponse
@@ -27,7 +27,7 @@ trait MatrixSynapseTrait {
     private function getToken(string $serverID, string $refreshToken): ?object
     {
         $entityManager = $this->getDoctrine()->getManager();
-        return $entityManager->getRepository(Tokens::class)->findOneBy([
+        return $entityManager->getRepository(Token::class)->findOneBy([
             'serverid' => $serverID,
             'refreshtoken' => $refreshToken
         ]);

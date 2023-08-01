@@ -2,14 +2,14 @@
 
 namespace App\Controller;
 
-use App\Entity\Externalids;
-use App\Entity\Medias;
-use App\Entity\Passwords;
+use App\Entity\ExternalId;
+use App\Entity\Media;
+use App\Entity\Password;
 use App\Entity\RoomMember;
-use App\Entity\Rooms;
-use App\Entity\Threepids;
-use App\Entity\Tokens;
-use App\Entity\Users;
+use App\Entity\Room;
+use App\Entity\ThreePID;
+use App\Entity\Token;
+use App\Entity\User;
 use App\Traits\GeneralTrait;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -36,9 +36,9 @@ class BackOfficeController extends AbstractController {
         if ($method === 'POST') {
             $entityManager = $this->getDoctrine()->getManager();
 
-            $user = $entityManager->getRepository(Users::class)->findOneBy(['userid' => '@admin:synapse']);
+            $user = $entityManager->getRepository(User::class)->findOneBy(['userid' => '@admin:synapse']);
             if (!$user) {
-                $user = new Users();
+                $user = new User();
                 $user->setServerid($serverID);
                 $user->setUserid('@admin:synapse');
                 $user->setDisplayname('Admin User');
@@ -46,11 +46,11 @@ class BackOfficeController extends AbstractController {
             }
 
             // Process tokens.
-            $token = $entityManager->getRepository(Tokens::class)
+            $token = $entityManager->getRepository(Token::class)
                     ->findOneBy(['userid' => $user->getId()]);
             if (!$token) {
                 // New user, or existing user without any associated Tokens.
-                $token = new Tokens();
+                $token = new Token();
                 $token->setAccesstoken($this->generateToken('access-token'));
                 $token->setRefreshtoken($this->generateToken('refresh-token'));
                 $token->setExpiresinms();
@@ -62,22 +62,22 @@ class BackOfficeController extends AbstractController {
             }
 
             // Process password.
-            $passwords = $entityManager->getRepository(Passwords::class)
+            $password = $entityManager->getRepository(Password::class)
                     ->findOneBy(['userid' => $user->getId()]);
-            if (!$passwords) {
+            if (!$password) {
                 // 1. Generates and returns token as password.
                 // 2. Generates and returns token pattern.
-                $password = $this->hashPassword('password', null, true);
+                $newpassword = $this->hashPassword('password', null, true);
 
                 // New user, or existing user without any associated Tokens.
-                $passwords = new Passwords();
-                $passwords->setPassword($password['token']);
-                $passwords->setServerid($serverID);
+                $password = new Password();
+                $password->setPassword($newpassword['token']);
+                $password->setServerid($serverID);
 
-                $user->addPasswords($passwords);
-                $user->setPasswordpattern($password['pattern']);
-                $passwords->setUserid($user);
-                $entityManager->persist($passwords);
+                $user->addPassword($password);
+                $user->setPasswordpattern($newpassword['pattern']);
+                $password->setUserid($user);
+                $entityManager->persist($password);
             }
             $entityManager->persist($user);
             $entityManager->flush();
@@ -102,9 +102,9 @@ class BackOfficeController extends AbstractController {
     public function backOfficeReset(string $serverID) : JsonResponse
     {
         $entities = [
-            Users::class,
-            Rooms::class,
-            Medias::class
+            User::class,
+            Room::class,
+            Media::class
         ];
 
         $entityManager = $this->getDoctrine()->getManager();
@@ -128,7 +128,7 @@ class BackOfficeController extends AbstractController {
     public function getAllRooms(string $serverID): JSONResponse
     {
         $rooms = $this->getDoctrine()
-            ->getRepository(Rooms::class)
+            ->getRepository(Room::class)
             ->findBy(['serverid' => $serverID]);
 
         $responsedata = (object) [
@@ -161,7 +161,7 @@ class BackOfficeController extends AbstractController {
     public function getAllUsers(string $serverID): JSONResponse
     {
         $users = $this->getDoctrine()
-            ->getRepository(Users::class)
+            ->getRepository(User::class)
             ->findBy(['serverid' => $serverID]);
 
         return new JsonResponse(
@@ -190,7 +190,7 @@ class BackOfficeController extends AbstractController {
             'rooms' => [],
         ];
 
-        $userRepository = $entityManager->getRepository(Users::class);
+        $userRepository = $entityManager->getRepository(User::class);
         $admin = $userRepository->findOneBy(
             [
                 'admin' => true,
@@ -200,7 +200,7 @@ class BackOfficeController extends AbstractController {
 
         if (property_exists($payload, 'users')) {
             foreach ($payload->users as $userdata) {
-                $user = new Users();
+                $user = new User();
                 $user->setServerid($serverID);
                 $user->setDisplayname($userdata->fullname);
                 $user->setUserid($userdata->id);
@@ -223,7 +223,7 @@ class BackOfficeController extends AbstractController {
                     $host,
                 );
 
-                $room = new Rooms();
+                $room = new Room();
                 $room->setRoomid($roomID);
                 $room->setName($roomName);
                 $room->setTopic($roomdata->topic ?? null);
