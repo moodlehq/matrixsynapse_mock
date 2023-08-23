@@ -252,6 +252,7 @@ class MatrixController extends AbstractController {
         $room->setTopic($payload->topic ?? null);
         $room->setServerid($serverID);
         $room->setCreator($accessCheck['user_id']);
+        $room->setSpace(null);
         if (isset($payload->room_alias_name) && !empty($payload->room_alias_name)) {
             $room_alias = "#{$payload->room_alias_name}:{$host}";
             $check_alias = $entityManager->getRepository(Room::class)->findOneBy(['roomalias' => $room_alias]);
@@ -465,6 +466,75 @@ class MatrixController extends AbstractController {
 
         return new JsonResponse((object) [
             'joined' => (object) $memberinfo,
+        ], 200);
+    }
+
+    /**
+     * Verify the room space state api.
+     *
+     * @Route("/v3/rooms/{roomID}/state/{eventType}/{stateKey}")
+     * @param string $serverID
+     * @param string $eventType
+     * @param string $stateKey
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function roomSpace(string $serverID, string $roomID, string $eventType, string $stateKey, Request $request):JsonResponse {
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+
+        $accessCheck = $this->authHttpCheck(['PUT'], $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
+        }
+
+        $entityManager = $this->getDoctrine()->getManager();
+
+        // Check room exists.
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
+            'serverid' => $serverID,
+            'roomid' => $roomID,
+        ]);
+        if (!$room) {
+            return $this->getUnknownRoomResponse();
+        }
+
+        // Check space exists.
+        $space = $entityManager->getRepository(Room::class)->findOneBy([
+            'serverid' => $serverID,
+            'roomid' => $stateKey,
+        ]);
+        if (!$space) {
+            return $this->getUnknownRoomResponse();
+        }
+
+        $payload = json_decode($request->getContent());
+
+        if ($eventType == 'm.space.child') {
+            $check = $this->validateRequest((array)$payload, ['via']);
+            if (!$check['status']) {
+                return $check['message'];
+            }
+            $room->setSpace($stateKey);
+
+        } else {
+            // Unknown state.
+            return new JsonResponse((object) [
+                'errcode' => 'M_UNRECOGNIZED',
+                'error' => 'Unrecognized request'
+            ], 404);
+        }
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($room);
+        $entityManager->flush();
+
+        // Create a mock event ID. This isn't the way Synapse does it (I think), but it's a good enough approximation.
+        // This ID doesn't change if the seed data is the same.
+        $eventID = substr(hash('sha256', ($serverID . $roomID . $eventType)), 0, 44);
+
+        return new JsonResponse((object) [
+            'event_id' => $eventID,
         ], 200);
     }
 }

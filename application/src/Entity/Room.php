@@ -56,6 +56,11 @@ class Room
     private $creator;
 
     /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $space;
+
+    /**
      * @ORM\OneToMany(targetEntity=RoomMember::class, mappedBy="room", cascade={"persist", "remove"})
      */
     private Collection $members;
@@ -71,6 +76,7 @@ class Room
             'avatar' => $this->avatar,
             'roomalias' => $this->roomalias,
             'creator' => $this->creator,
+            'space' => $this->space,
         ];
     }
 
@@ -164,6 +170,18 @@ class Room
     public function setCreator(?string $creator): self
     {
         $this->creator = $creator;
+
+        return $this;
+    }
+
+    public function getSpace(): ?string
+    {
+        return $this->space;
+    }
+
+    public function setSpace(?string $space): self
+    {
+        $this->space = $space;
 
         return $this;
     }
