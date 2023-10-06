@@ -56,6 +56,11 @@ class RoomMember
      */
     private $state;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $powerlevel;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -151,6 +156,18 @@ class RoomMember
     public function setState(string $state = null): self
     {
         $this->state = $state;
+
+        return $this;
+    }
+
+    public function getPowerLevel(): ?int
+    {
+        return $this->powerlevel;
+    }
+
+    public function setPowerLevel(int $powerlevel): self
+    {
+        $this->powerlevel = $powerlevel;
 
         return $this;
     }
