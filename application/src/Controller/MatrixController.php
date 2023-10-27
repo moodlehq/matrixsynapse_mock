@@ -7,9 +7,9 @@ use App\Entity\Room;
 use App\Entity\RoomMember;
 use App\Entity\Token;
 use App\Entity\User;
+use App\Service\Filter;
 use App\Traits\GeneralTrait;
 use App\Traits\MatrixSynapseTrait;
-use stdClass;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -274,6 +274,51 @@ class MatrixController extends AbstractController {
     }
 
     /**
+     * Sync Matrix room.
+     * Sync room according to the API:
+     * https://spec.matrix.org/v1.8/client-server-api/#get_matrixclientv3sync
+     *
+     * @Route("/v3/sync")
+     * @param string $serverID
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function sync(string $serverID, Request $request):JsonResponse {
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck(['GET'], $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
+        }
+        // Params are being queried via a filter in the request.
+        $filter = Filter::fromRequest($request);
+
+        $roomSearch = [
+            'serverid' => $serverID,
+        ];
+
+        if ($roomIds = $filter->getRoomFilter()->getRoomIds()) {
+            $roomSearch['roomid'] = $roomIds;
+        }
+
+        // Get a list of rooms.
+        $entityManager = $this->getDoctrine()->getManager();
+        $roomList = $entityManager->getRepository(Room::class)->findBy($roomSearch);
+
+        // Get room state data for each room.
+        $roomData = [];
+        foreach ($roomList as $room) {
+            $roomData[$room->getRoomId()] = $room->getRoomState($request);
+        }
+
+        return new JsonResponse((object) [
+            'rooms' => [
+                'join' => $roomData,
+            ],
+        ]);
+    }
+
+    /**
      * Create Matrix room.
      *
      * @Route("/r0/rooms/{roomID}/kick")
@@ -401,6 +446,25 @@ class MatrixController extends AbstractController {
             $check = $this->validateRequest((array)$payload, ['users']);
             if (!$check['status']) {
                 return $check['message'];
+            }
+            // Update power levels for each room member.
+            foreach ($payload->users as $userid => $level) {
+                if (!empty($level)) {
+                    $user = $entityManager->getRepository(User::class)->findOneBy([
+                        'serverid' => $serverID,
+                        'userid' => $userid,
+                    ]);
+                    if (!empty($user)) {
+                        $membership = $entityManager->getRepository(RoomMember::class)->findOneBy([
+                            'serverid' => $serverID,
+                            'room' => $room,
+                            'user' => $user,
+                        ]);
+                        if(!empty($membership)) {
+                            $membership->setPowerLevel($level);
+                        }
+                    }
+                }
             }
         } else {
             // Unknown state.

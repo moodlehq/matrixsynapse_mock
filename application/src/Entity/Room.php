@@ -200,4 +200,62 @@ class Room
     {
         return $this->members;
     }
+
+    public function getRoomState(): array
+    {
+        // We will probably need to pass a filter in the future.
+        // At the moment we only know how to serve a set of power levels.
+        $roomData = [
+            'state' => [
+                'events' => [],
+            ],
+        ];
+
+        $roomData['state']['events'][] = $this->getPowerLevelState();
+
+        return $roomData;
+    }
+
+    protected function getPowerLevelState(): array
+    {
+        // Power level values.
+        $powerLevelDefault = 0;
+        $powerLevelModerator = 50;
+        $powerLevelMaximum = 100;
+
+        // Get the members of the room who have a powerlevel set.
+        $members = $this->getMembers()->filter(function (RoomMember $member) {
+            return $member->getPowerLevel() !== null;
+        });
+
+        // Build the power level state.
+        $memberInfo = $members->map(fn(RoomMember $member) => [
+            $member->getUser()->getUserid() => $member->getPowerLevel(),
+        ])->toArray();
+
+        return [
+            'type' => 'm.room.power_levels',
+            'content' => [
+                'users' => (object) $memberInfo,
+                'users_default' => $powerLevelDefault,
+                'events' => [
+                    'm.room.name' => $powerLevelModerator,
+                    'm.room.power_levels' => $powerLevelMaximum,
+                    'm.room.history_visibility' => $powerLevelMaximum,
+                    'm.room.canonical_alias' => $powerLevelModerator,
+                    'm.room.avatar' => $powerLevelModerator,
+                    'm.room.tombstone' => $powerLevelMaximum,
+                    'm.room.server_acl' => $powerLevelMaximum,
+                    'm.room.encryption' => $powerLevelMaximum,
+                ],
+                'events_default' =>  $powerLevelDefault,
+                'state_default' => $powerLevelModerator,
+                'ban' => $powerLevelModerator,
+                'kick' => $powerLevelModerator,
+                'redact' => $powerLevelModerator,
+                'invite' =>  $powerLevelDefault,
+                'historical' => $powerLevelMaximum,
+            ],
+        ];
+    }
 }
