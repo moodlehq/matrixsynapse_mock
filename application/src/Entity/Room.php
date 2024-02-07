@@ -229,9 +229,9 @@ class Room
         });
 
         // Build the power level state.
-        $memberInfo = $members->map(fn(RoomMember $member) => [
+        $memberInfo = array_merge(...$members->map(fn(RoomMember $member) => [
             $member->getUser()->getUserid() => $member->getPowerLevel(),
-        ])->toArray();
+        ])->toArray());
 
         return [
             'type' => 'm.room.power_levels',
