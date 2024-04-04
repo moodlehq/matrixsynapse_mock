@@ -114,6 +114,23 @@ trait GeneralTrait {
                     ], 403);
                     return $response;
                 }
+
+                if ($check === 'user_id') {
+                    $userid = $requested['user_id'];
+                    // Isolate the username from '@username:server'.
+                    $start = strpos($userid, '@');
+                    $end = strpos($userid, ':', $start);
+                    $username = substr($userid, ($start + 1), ($end - $start) - 1);
+                    // Return an error if it is numeric.
+                    if (is_numeric($username)) {
+                        $response['status'] = false;
+                        $response['message'] = new JsonResponse((object) [
+                            'errcode' => 'M_INVALID_USERNAME',
+                            'error' => 'Numeric user IDs are reserved for guest users.'
+                        ], 400);
+                        return $response;
+                    }
+                }
             }
         } else {
             $response['status'] = false;
