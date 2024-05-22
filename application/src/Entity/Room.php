@@ -259,7 +259,7 @@ class Room
                 'ban' => $powerLevels['moderator'],
                 'kick' => $powerLevels['moderator'],
                 'redact' => $powerLevels['moderator'],
-                'invite' =>  $powerLevels['default'],
+                'invite' =>  $powerLevels['moderator'],
                 'historical' => $powerLevels['maximum'],
             ],
         ];
@@ -284,7 +284,7 @@ class Room
             'ban' => $powerLevels['moderator'],
             'kick' => $powerLevels['moderator'],
             'redact' => $powerLevels['moderator'],
-            'invite' =>  $powerLevels['default'],
+            'invite' =>  $powerLevels['moderator'],
         ];
     }
 }
