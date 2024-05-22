@@ -216,12 +216,18 @@ class Room
         return $roomData;
     }
 
+    protected function getPowerLevelValues(): array
+    {
+        return [
+            'default' => 0,
+            'moderator' => 50,
+            'maximum' => 100,
+        ];
+    }
+
     protected function getPowerLevelState(): array
     {
-        // Power level values.
-        $powerLevelDefault = 0;
-        $powerLevelModerator = 50;
-        $powerLevelMaximum = 100;
+        $powerLevels = $this->getPowerLevelValues();
 
         // Get the members of the room who have a powerlevel set.
         $members = $this->getMembers()->filter(function (RoomMember $member) {
@@ -237,25 +243,48 @@ class Room
             'type' => 'm.room.power_levels',
             'content' => [
                 'users' => (object) $memberInfo,
-                'users_default' => $powerLevelDefault,
+                'users_default' => $powerLevels['default'],
                 'events' => [
-                    'm.room.name' => $powerLevelModerator,
-                    'm.room.power_levels' => $powerLevelMaximum,
-                    'm.room.history_visibility' => $powerLevelMaximum,
-                    'm.room.canonical_alias' => $powerLevelModerator,
-                    'm.room.avatar' => $powerLevelModerator,
-                    'm.room.tombstone' => $powerLevelMaximum,
-                    'm.room.server_acl' => $powerLevelMaximum,
-                    'm.room.encryption' => $powerLevelMaximum,
+                    'm.room.name' => $powerLevels['moderator'],
+                    'm.room.power_levels' => $powerLevels['maximum'],
+                    'm.room.history_visibility' => $powerLevels['maximum'],
+                    'm.room.canonical_alias' => $powerLevels['moderator'],
+                    'm.room.avatar' => $powerLevels['moderator'],
+                    'm.room.tombstone' => $powerLevels['maximum'],
+                    'm.room.server_acl' => $powerLevels['maximum'],
+                    'm.room.encryption' => $powerLevels['maximum'],
                 ],
-                'events_default' =>  $powerLevelDefault,
-                'state_default' => $powerLevelModerator,
-                'ban' => $powerLevelModerator,
-                'kick' => $powerLevelModerator,
-                'redact' => $powerLevelModerator,
-                'invite' =>  $powerLevelDefault,
-                'historical' => $powerLevelMaximum,
+                'events_default' =>  $powerLevels['default'],
+                'state_default' => $powerLevels['moderator'],
+                'ban' => $powerLevels['moderator'],
+                'kick' => $powerLevels['moderator'],
+                'redact' => $powerLevels['moderator'],
+                'invite' =>  $powerLevels['default'],
+                'historical' => $powerLevels['maximum'],
             ],
+        ];
+    }
+
+    public function getPowerLevels(): array
+    {
+        $powerLevels = $this->getPowerLevelValues();
+
+        // Get the members of the room who have a power level set.
+        $members = $this->getMembers()->filter(function (RoomMember $member) {
+            return $member->getPowerLevel() !== null;
+        });
+
+        // Build list of users and their power level.
+        $memberInfo = array_merge(...$members->map(fn(RoomMember $member) => [
+            $member->getUser()->getUserid() => $member->getPowerLevel(),
+        ])->toArray());
+
+        return [
+            'users' => (object) $memberInfo,
+            'ban' => $powerLevels['moderator'],
+            'kick' => $powerLevels['moderator'],
+            'redact' => $powerLevels['moderator'],
+            'invite' =>  $powerLevels['default'],
         ];
     }
 }

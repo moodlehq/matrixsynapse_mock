@@ -135,7 +135,11 @@ class BackOfficeController extends AbstractController {
             'rooms' => array_map(function ($room) {
                 $roomdata = $room->jsonSerialize();
                 $roomdata->members = array_map(
-                    fn($membership) => $membership->getUser()->jsonSerialize(),
+                    function (RoomMember $membership) {
+                        $memberdata = $membership->getUser()->jsonSerialize();
+                        $memberdata->powerlevel = $membership->getPowerLevel() ?? 0;
+                        return $memberdata;
+                    },
                     array_filter(
                         $room->getMembers()->toArray(),
                         function (RoomMember $membership): bool {
