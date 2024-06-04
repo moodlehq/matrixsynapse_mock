@@ -5,6 +5,11 @@ LABEL maintainer="Stevani Andolo <stevani.andolo@moodle.com>" \
 
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
+
+# Allow composer to run plugins during build.
+# https://github.com/composer/composer/issues/11839
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 RUN echo "Building for ${TARGETPLATFORM}"
 
 EXPOSE 80
