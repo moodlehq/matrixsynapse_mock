@@ -401,7 +401,7 @@ class MatrixController extends AbstractController {
         // 1. Check call auth.
         // 2. Check HTTP method is accepted.
 
-        $accessCheck = $this->authHttpCheck(['PUT'], $request);
+        $accessCheck = $this->authHttpCheck(['PUT', 'GET'], $request);
         if (!$accessCheck['status']) {
             return $accessCheck['message'];
         }
@@ -417,61 +417,83 @@ class MatrixController extends AbstractController {
             return $this->getUnknownRoomResponse();
         }
 
-        $payload = json_decode($request->getContent());
+        $method = $request->getMethod();
 
-        if ($eventType == 'm.room.topic') {
-            $check = $this->validateRequest((array)$payload, ['topic']);
-            if (!$check['status']) {
-                return $check['message'];
-            }
-            $room->setTopic($payload->topic);
+        // PUT requests.
+        if ($method == 'PUT') {
 
-        } elseif ($eventType == 'm.room.name') {
-            // Update room name.
-            $check = $this->validateRequest((array)$payload, ['name']);
-            if (!$check['status']) {
-                return $check['message'];
-            }
-            $room->setName($payload->name);
+            $payload = json_decode($request->getContent());
 
-        } elseif ($eventType == 'm.room.avatar') {
-            // Update room avatar.
-            $check = $this->validateRequest((array)$payload, ['url']);
-            if (!$check['status']) {
-                return $check['message'];
-            }
-            $room->setAvatar($payload->url);
-        } elseif ($eventType == 'm.room.power_levels') {
-            // Room power level api call validation to check if the users are passed in the payload to update the power level.
-            $check = $this->validateRequest((array)$payload, ['users']);
-            if (!$check['status']) {
-                return $check['message'];
-            }
-            // Update power levels for each room member.
-            foreach ($payload->users as $userid => $level) {
-                if (!empty($level)) {
-                    $user = $entityManager->getRepository(User::class)->findOneBy([
-                        'serverid' => $serverID,
-                        'userid' => $userid,
-                    ]);
-                    if (!empty($user)) {
-                        $membership = $entityManager->getRepository(RoomMember::class)->findOneBy([
+            if ($eventType == 'm.room.topic') {
+                $check = $this->validateRequest((array)$payload, ['topic']);
+                if (!$check['status']) {
+                    return $check['message'];
+                }
+                $room->setTopic($payload->topic);
+
+            } elseif ($eventType == 'm.room.name') {
+                // Update room name.
+                $check = $this->validateRequest((array)$payload, ['name']);
+                if (!$check['status']) {
+                    return $check['message'];
+                }
+                $room->setName($payload->name);
+
+            } elseif ($eventType == 'm.room.avatar') {
+                // Update room avatar.
+                $check = $this->validateRequest((array)$payload, ['url']);
+                if (!$check['status']) {
+                    return $check['message'];
+                }
+                $room->setAvatar($payload->url);
+            } elseif ($eventType == 'm.room.power_levels') {
+                // Room power level api call validation to check if the users are passed in the payload to update the power level.
+                $check = $this->validateRequest((array)$payload, ['users']);
+                if (!$check['status']) {
+                    return $check['message'];
+                }
+                // Update power levels for each room member.
+                foreach ($payload->users as $userid => $level) {
+                    if (!empty($level)) {
+                        $user = $entityManager->getRepository(User::class)->findOneBy([
                             'serverid' => $serverID,
-                            'room' => $room,
-                            'user' => $user,
+                            'userid' => $userid,
                         ]);
-                        if(!empty($membership)) {
-                            $membership->setPowerLevel($level);
+                        if (!empty($user)) {
+                            $membership = $entityManager->getRepository(RoomMember::class)->findOneBy([
+                                'serverid' => $serverID,
+                                'room' => $room,
+                                'user' => $user,
+                            ]);
+                            if(!empty($membership)) {
+                                $membership->setPowerLevel($level);
+                            }
                         }
                     }
                 }
+            } else {
+                // Unknown state.
+                return new JsonResponse((object) [
+                    'errcode' => 'M_UNRECOGNIZED',
+                    'error' => 'Unrecognized request'
+                ], 404);
             }
-        } else {
-            // Unknown state.
-            return new JsonResponse((object) [
-                'errcode' => 'M_UNRECOGNIZED',
-                'error' => 'Unrecognized request'
-            ], 404);
+
+        // GET requests.
+        } else if ($method == 'GET') {
+
+            if ($eventType == 'm.room.power_levels') {
+
+                $powerLevels = $room->getPowerLevels($request);
+                return new JsonResponse((object) $powerLevels, 200);
+
+            } else {
+                // Unknown state.
+                return new JsonResponse((object) [
+                    'errcode' => 'M_UNRECOGNIZED',
+                    'error' => 'Unrecognized request'
+                ], 404);
+            }
         }
 
         $entityManager = $this->getDoctrine()->getManager();
