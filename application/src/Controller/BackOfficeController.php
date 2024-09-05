@@ -69,6 +69,13 @@ class BackOfficeController extends AbstractController {
                 // 2. Generates and returns token pattern.
                 $newpassword = $this->hashPassword('password', null, true);
 
+                if (!$newpassword['token']) {
+                    return new JsonResponse((object) [
+                        'errcode' => 'M_INVALID_TOKEN',
+                        'error' => 'Cannot hash the token.'
+                    ], 400);
+                }
+
                 // New user, or existing user without any associated Tokens.
                 $password = new Password();
                 $password->setPassword($newpassword['token']);

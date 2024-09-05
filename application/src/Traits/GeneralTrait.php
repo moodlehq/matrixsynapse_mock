@@ -73,7 +73,7 @@ trait GeneralTrait {
         $createdTokenPattern = [];
         $dashedPattern = $dashedPattern ? explode(',', $dashedPattern) : [];
         for ($i = 0; $i < strlen($string); $i++) {
-            $randomDashedPosition = count($dashedPattern) > 0 ? (int)$dashedPattern[$i] : (int)rand(1, 10);
+            $randomDashedPosition = count($dashedPattern) > 0 ? (int)$dashedPattern[$i] : rand(4, 10);
             if (count($dashedPattern) > 0) {
                 $previousPosition = (int)($previousPosition + $randomDashedPosition);
                 $token = substr_replace($token ?? $string, '-', $previousPosition, 1);
