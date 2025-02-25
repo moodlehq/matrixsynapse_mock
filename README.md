@@ -69,6 +69,7 @@ https://spec.matrix.org/v1.5/client-server-api/
 * Room manipulations (Update room topic, name and avatar): expected method (PUT)
 * Get members of existing room: expected method (GET)
 * Upload media: expected method (POST)
+* Invite a user to participate in a particular room: expected method (POST)
 
 ## API coverage
 The following are the currently mocked API endpoints. These should respond with the same HTTP status code, content type and response content as a real Synapse server.

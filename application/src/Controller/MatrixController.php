@@ -386,6 +386,82 @@ class MatrixController extends AbstractController {
     }
 
     /**
+     * Invite a user into an existing Matrix room.
+     *
+     * @param string  $serverID The server ID.
+     * @param string  $roomID   The Matrix rooms ID.
+     * @param Request $request  The current raw request.
+     *
+     * @Route("/r0/rooms/{roomID}/invite")
+     * @Route("/v3/rooms/{roomID}/invite")
+     *
+     * @return JsonResponse
+     */
+    public function invite(
+        string $serverID,
+        string $roomID,
+        Request $request,
+    ): JsonResponse {
+        // 1. Check call auth.
+        // 2. Check HTTP method is accepted.
+        $accessCheck = $this->authHttpCheck(['POST'], $request);
+        if (!$accessCheck['status']) {
+            return $accessCheck['message'];
+        }
+
+        $entityManager = $this->getDoctrine()->getManager();
+
+        // Check room exists.
+        $room = $entityManager->getRepository(Room::class)->findOneBy([
+            'serverid' => $serverID,
+            'roomid' => $roomID,
+        ]);
+        if (!$room) {
+            return $this->getUnknownRoomResponse();
+        }
+
+        $payload = json_decode($request->getContent());
+        $check = $this->validateRequest((array)$payload, ['user_id']);
+        if (!$check['status']) {
+            return $check['message'];
+        }
+
+        $user = $entityManager->getRepository(User::class)->findOneBy([
+            'serverid' => $serverID,
+            'userid' => $payload->user_id,
+        ]);
+        if ($user) {
+            // Cannot invite user that is already in the room.
+            $membership = $entityManager->getRepository(RoomMember::class)->findOneBy([
+                'serverid' => $serverID,
+                'room' => $room,
+                'user' => $user,
+            ]);
+
+            if (!empty($membership)) {
+                return new JsonResponse((object) [
+                    'errcode' => 'M_NOT_MEMBER',
+                    'error' => 'The invitee is already a member of the room.'
+                ], 403);
+            }
+
+            // Store the room member in the DB.
+            $roomMember = new RoomMember();
+
+            $roomMember->setRoom($room);
+            $roomMember->setUser($user);
+            $roomMember->setAccepted(false); // This API only allows a member to be invited. It does not force the join.
+            $roomMember->setBanned();
+            $roomMember->setServerid($serverID);
+
+            $entityManager->persist($roomMember);
+            $entityManager->flush();
+        }
+
+        return new JsonResponse((object)[], 200);
+    }
+
+    /**
      * Update various room state components.
      *
      * @Route("/r0/rooms/{roomID}/state/{eventType}")
